@@ -44,6 +44,7 @@ object Versions {
     const val kasechange = "1.3.0"
     const val ktlint = "11.6.0"
     const val pig = "0.6.2"
+    const val kotlinxCoroutines = "1.6.0"
 
     // Testing
     const val assertj = "3.11.0"
@@ -84,6 +85,7 @@ object Deps {
     const val picoCli = "info.picocli:picocli:${Versions.picoCli}"
     const val pig = "org.partiql:partiql-ir-generator:${Versions.pig}"
     const val pigRuntime = "org.partiql:partiql-ir-generator-runtime:${Versions.pig}"
+    const val kotlinxCoroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.kotlinxCoroutines}"
 
     // Testing
     const val assertj = "org.assertj:assertj-core:${Versions.assertj}"
