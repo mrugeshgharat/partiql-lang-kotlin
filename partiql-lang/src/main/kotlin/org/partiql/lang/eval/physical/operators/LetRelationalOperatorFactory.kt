@@ -50,7 +50,7 @@ internal class LetOperator(
     private val bindings: List<VariableBinding>
 ) : RelationExpression {
 
-    override fun evaluate(state: EvaluatorState): RelationIterator {
+    override suspend fun evaluate(state: EvaluatorState): RelationIterator {
         val rows = input.evaluate(state)
         return relation(rows.relType) {
             while (rows.nextRow()) {

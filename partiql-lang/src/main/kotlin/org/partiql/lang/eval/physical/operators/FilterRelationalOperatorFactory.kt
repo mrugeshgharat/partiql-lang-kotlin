@@ -51,7 +51,7 @@ internal class SelectOperatorDefault(
     val predicate: ValueExpression,
 ) : RelationExpression {
 
-    override fun evaluate(state: EvaluatorState): RelationIterator {
+    override suspend fun evaluate(state: EvaluatorState): RelationIterator {
         val input = input.evaluate(state)
         return relation(RelationType.BAG) {
             while (true) {

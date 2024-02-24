@@ -55,7 +55,7 @@ internal class LimitOperator(
     private val limit: ValueExpression,
 ) : RelationExpression {
 
-    override fun evaluate(state: EvaluatorState): RelationIterator {
+    override suspend fun evaluate(state: EvaluatorState): RelationIterator {
         val limit = evalLimitRowCount(limit, state)
         val rows = input.evaluate(state)
         return relation(rows.relType) {
@@ -66,7 +66,7 @@ internal class LimitOperator(
         }
     }
 
-    private fun evalLimitRowCount(rowCountExpr: ValueExpression, env: EvaluatorState): Long {
+    private suspend fun evalLimitRowCount(rowCountExpr: ValueExpression, env: EvaluatorState): Long {
         val limitExprValue = rowCountExpr(env)
         if (limitExprValue.type != ExprValueType.INT) {
             err(

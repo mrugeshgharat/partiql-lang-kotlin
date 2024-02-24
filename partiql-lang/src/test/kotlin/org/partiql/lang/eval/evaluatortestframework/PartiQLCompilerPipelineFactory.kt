@@ -1,5 +1,6 @@
 package org.partiql.lang.eval.evaluatortestframework
 
+import kotlinx.coroutines.runBlocking
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
@@ -92,7 +93,7 @@ internal class PartiQLCompilerPipelineFactory() : PipelineFactory {
 
             override fun evaluate(query: String): ExprValue {
                 val statement = pipeline.compile(query)
-                return when (val result = statement.eval(session)) {
+                return when (val result = runBlocking { statement.eval(session) }) {
                     is PartiQLResult.Delete,
                     is PartiQLResult.Insert,
                     is PartiQLResult.Replace -> error("DML is not supported by test suite")

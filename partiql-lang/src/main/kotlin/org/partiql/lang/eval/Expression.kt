@@ -34,4 +34,6 @@ interface Expression {
      * Evaluates the expression with the given Session
      */
     fun evaluate(session: EvaluationSession): PartiQLResult
+
+    suspend fun evalAsync(session: EvaluationSession): PartiQLResult
 }

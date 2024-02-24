@@ -1,6 +1,7 @@
 package org.partiql.lang.compiler.memorydb
 
 import com.amazon.ionelement.api.toIonValue
+import kotlinx.coroutines.runBlocking
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.lang.ION
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
@@ -185,7 +186,7 @@ class QueryEngine(val db: MemoryDatabase) {
         // First step is to plan the query.
         // This parses the query and runs it through all the planner passes:
         // AST -> logical plan -> resolved logical plan -> default physical plan -> custom physical plan
-        return when (val result = statement.eval(session)) {
+        return when (val result = runBlocking { statement.eval(session) }) {
             is PartiQLResult.Value -> result.value
             is PartiQLResult.Delete -> {
                 val targetTableId = UUID.fromString(result.target)

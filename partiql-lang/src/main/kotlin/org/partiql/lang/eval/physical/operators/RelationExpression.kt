@@ -15,5 +15,5 @@ import org.partiql.lang.eval.relation.RelationIterator
  * implementation details such as [org.partiql.lang.eval.physical.RelationThunkEnv].
  */
 fun interface RelationExpression {
-    fun evaluate(state: EvaluatorState): RelationIterator
+    suspend fun evaluate(state: EvaluatorState): RelationIterator
 }

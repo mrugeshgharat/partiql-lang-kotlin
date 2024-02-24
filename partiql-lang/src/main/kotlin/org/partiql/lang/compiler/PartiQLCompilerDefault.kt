@@ -14,6 +14,7 @@
 
 package org.partiql.lang.compiler
 
+import kotlinx.coroutines.runBlocking
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
@@ -47,7 +48,7 @@ internal class PartiQLCompilerDefault(
     private lateinit var exprConverter: PhysicalPlanCompilerImpl
     private val bexprConverter = PhysicalBexprToThunkConverter(
         exprConverter = object : PhysicalPlanCompiler {
-            override fun convert(expr: PartiqlPhysical.Expr): PhysicalPlanThunk = exprConverter.convert(expr)
+            override suspend fun convert(expr: PartiqlPhysical.Expr): PhysicalPlanThunk = exprConverter.convert(expr)
         },
         relationalOperatorFactory = operatorFactories
     )
@@ -67,7 +68,7 @@ internal class PartiQLCompilerDefault(
             is PartiqlPhysical.Statement.Dml -> compileDml(stmt, statement.locals.size)
             is PartiqlPhysical.Statement.Exec,
             is PartiqlPhysical.Statement.Query -> {
-                val expression = exprConverter.compile(statement)
+                val expression = runBlocking { exprConverter.compile(statement) }
                 PartiQLStatement { expression.eval(it).toValue() }
             }
             is PartiqlPhysical.Statement.Explain -> throw PartiQLException("Unable to compile EXPLAIN without details.")
@@ -80,6 +81,18 @@ internal class PartiQLCompilerDefault(
             is PartiqlPhysical.Statement.Exec,
             is PartiqlPhysical.Statement.Query -> compile(statement)
             is PartiqlPhysical.Statement.Explain -> PartiQLStatement { compileExplain(stmt, details) }
+        }
+    }
+
+    override suspend fun compileAsync(statement: PartiqlPhysical.Plan): PartiQLStatement {
+        return when (val stmt = statement.stmt) {
+            is PartiqlPhysical.Statement.Dml -> compileDml(stmt, statement.locals.size)
+            is PartiqlPhysical.Statement.Exec,
+            is PartiqlPhysical.Statement.Query -> {
+                val expression = exprConverter.compile(statement)
+                PartiQLStatement { expression.evalAsync(it) }
+            }
+            is PartiqlPhysical.Statement.Explain -> throw PartiQLException("Unable to compile EXPLAIN without details.")
         }
     }
 

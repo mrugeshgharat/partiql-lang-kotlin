@@ -9,5 +9,5 @@ import org.partiql.lang.domains.PartiqlPhysical
  * [org.partiql.lang.eval.EvaluatingCompiler].
  */
 internal interface PhysicalPlanCompiler {
-    fun convert(expr: PartiqlPhysical.Expr): PhysicalPlanThunk
+    suspend fun convert(expr: PartiqlPhysical.Expr): PhysicalPlanThunk
 }

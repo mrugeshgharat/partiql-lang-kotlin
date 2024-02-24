@@ -70,7 +70,7 @@ internal class AggregateOperatorDefault(
     val keys: List<CompiledGroupKey>,
     val functions: List<CompiledAggregateFunction>
 ) : RelationExpression {
-    override fun evaluate(state: EvaluatorState): RelationIterator = relation(RelationType.BAG) {
+    override suspend fun evaluate(state: EvaluatorState): RelationIterator = relation(RelationType.BAG) {
         val aggregationMap = TreeMap<ExprValue, List<Accumulator>>(DEFAULT_COMPARATOR)
 
         val sourceIter = source.evaluate(state)

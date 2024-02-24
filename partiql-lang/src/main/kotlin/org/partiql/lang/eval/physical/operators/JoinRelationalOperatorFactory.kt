@@ -78,7 +78,7 @@ internal object JoinRelationalOperatorFactoryDefault : JoinRelationalOperatorFac
         is PartiqlPhysical.JoinType.Full -> TODO("Full join")
     }
 
-    private fun ValueExpression.closure() = { state: EvaluatorState ->
+    private fun ValueExpression.closure(): suspend (EvaluatorState) -> Boolean = { state: EvaluatorState ->
         val v = invoke(state)
         v.isNotUnknown() && v.booleanValue()
     }
@@ -90,10 +90,10 @@ internal object JoinRelationalOperatorFactoryDefault : JoinRelationalOperatorFac
 internal class InnerJoinOperator(
     private val lhs: RelationExpression,
     private val rhs: RelationExpression,
-    private val condition: (EvaluatorState) -> Boolean
+    private val condition: suspend (EvaluatorState) -> Boolean
 ) : RelationExpression {
 
-    override fun evaluate(state: EvaluatorState) = relation(RelationType.BAG) {
+    override suspend fun evaluate(state: EvaluatorState) = relation(RelationType.BAG) {
         val leftItr = lhs.evaluate(state)
         while (leftItr.nextRow()) {
             val rightItr = rhs.evaluate(state)
@@ -112,11 +112,11 @@ internal class InnerJoinOperator(
 internal class LeftJoinOperator(
     private val lhs: RelationExpression,
     private val rhs: RelationExpression,
-    private val condition: (EvaluatorState) -> Boolean,
+    private val condition: suspend (EvaluatorState) -> Boolean,
     private val setRightSideVariablesToNull: (EvaluatorState) -> Unit
 ) : RelationExpression {
 
-    override fun evaluate(state: EvaluatorState) = relation(RelationType.BAG) {
+    override suspend fun evaluate(state: EvaluatorState) = relation(RelationType.BAG) {
         val leftItr = lhs.evaluate(state)
         while (leftItr.nextRow()) {
             val rightItr = rhs.evaluate(state)
@@ -141,11 +141,11 @@ internal class LeftJoinOperator(
 internal class RightJoinOperator(
     private val lhs: RelationExpression,
     private val rhs: RelationExpression,
-    private val condition: (EvaluatorState) -> Boolean,
+    private val condition: suspend (EvaluatorState) -> Boolean,
     private val setLeftSideVariablesToNull: (EvaluatorState) -> Unit
 ) : RelationExpression {
 
-    override fun evaluate(state: EvaluatorState) = relation(RelationType.BAG) {
+    override suspend fun evaluate(state: EvaluatorState) = relation(RelationType.BAG) {
         val rightItr = rhs.evaluate(state)
         while (rightItr.nextRow()) {
             val leftItr = lhs.evaluate(state)

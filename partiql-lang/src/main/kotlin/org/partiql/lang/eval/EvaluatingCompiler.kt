@@ -23,6 +23,7 @@ import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.toIonValue
+import kotlinx.coroutines.runBlocking
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.Property
 import org.partiql.errors.PropertyValueMap
@@ -400,13 +401,17 @@ internal open class EvaluatingCompiler(
                 val value = thunk(env)
                 return PartiQLResult.Value(value = value)
             }
+
+            override suspend fun evalAsync(session: EvaluationSession): PartiQLResult {
+                TODO("Not yet implemented")
+            }
         }
     }
 
     /**
      * Evaluates an instance of [PartiqlAst.Statement] against a global set of bindings.
      */
-    fun eval(ast: PartiqlAst.Statement, session: EvaluationSession): ExprValue = compile(ast).eval(session)
+    fun eval(ast: PartiqlAst.Statement, session: EvaluationSession): ExprValue = runBlocking { compile(ast).eval(session) }
 
     /**
      * Compiles the specified [PartiqlAst.Statement] into a [ThunkEnv].

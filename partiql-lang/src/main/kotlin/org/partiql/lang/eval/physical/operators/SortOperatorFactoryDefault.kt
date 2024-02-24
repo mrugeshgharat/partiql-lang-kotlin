@@ -14,15 +14,13 @@
 
 package org.partiql.lang.eval.physical.operators
 
-import org.partiql.errors.ErrorCode
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.errNoContext
+import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
-import org.partiql.lang.util.interruptibleFold
 
 internal object SortOperatorFactoryDefault : SortOperatorFactory(DEFAULT_IMPL_NAME) {
     override fun create(
@@ -32,50 +30,57 @@ internal object SortOperatorFactoryDefault : SortOperatorFactory(DEFAULT_IMPL_NA
 }
 
 internal class SortOperatorDefault(private val sortKeys: List<CompiledSortKey>, private val sourceRelation: RelationExpression) : RelationExpression {
-    override fun evaluate(state: EvaluatorState): RelationIterator {
+    override suspend fun evaluate(state: EvaluatorState): RelationIterator {
         val source = sourceRelation.evaluate(state)
         return relation(RelationType.LIST) {
             val rows = mutableListOf<Array<ExprValue>>()
-            val comparator = getSortingComparator(sortKeys, state)
 
             // Consume Input
             while (source.nextRow()) {
                 rows.add(state.registers.clone())
             }
 
+            val rowWithValues = rows.map { row ->
+                state.load(row)
+                row to sortKeys.map { sk ->
+                    sk.value(state)
+                }
+            }.toMutableList()
+            val comparator = getSortingComparator(sortKeys.map { it.comparator })
+
             // Perform Sort
-            val sortedRows = rows.sortedWith(comparator)
+            val sortedRows = rowWithValues.sortedWith(comparator)
 
             // Yield Sorted Rows
             val iterator = sortedRows.iterator()
             while (iterator.hasNext()) {
-                state.load(iterator.next())
+                state.load(iterator.next().first)
                 yield()
             }
         }
     }
 }
 
+
 /**
  * Returns a [Comparator] that compares arrays of registers by using un-evaluated sort keys. It does this by modifying
  * the [state] to allow evaluation of the [sortKeys]
  */
-internal fun getSortingComparator(sortKeys: List<CompiledSortKey>, state: EvaluatorState): Comparator<Array<ExprValue>> {
-    val initial: Comparator<Array<ExprValue>>? = null
-    return sortKeys.interruptibleFold(initial) { intermediate, sortKey ->
-        if (intermediate == null) {
-            return@interruptibleFold compareBy<Array<ExprValue>, ExprValue>(sortKey.comparator) { row ->
-                state.load(row)
-                sortKey.value(state)
+internal fun getSortingComparator(sortKeys: List<NaturalExprValueComparators>): Comparator<Pair<Array<ExprValue>, List<ExprValue>>> {
+    return object : Comparator<Pair<Array<ExprValue>, List<ExprValue>>> {
+        override fun compare(
+            l: Pair<Array<ExprValue>, List<ExprValue>>,
+            r: Pair<Array<ExprValue>, List<ExprValue>>
+        ): Int {
+            val valsToCompare = l.second.zip(r.second)
+            sortKeys.zip(valsToCompare).map {
+                val comp = it.first
+                val cmpResult = comp.compare(it.second.first, it.second.second)
+                if (cmpResult != 0) {
+                    return cmpResult
+                }
             }
+            return 0
         }
-        return@interruptibleFold intermediate.thenBy(sortKey.comparator) { row ->
-            state.load(row)
-            sortKey.value(state)
-        }
-    } ?: errNoContext(
-        "Order BY comparator cannot be null",
-        ErrorCode.EVALUATOR_ORDER_BY_NULL_COMPARATOR,
-        internal = true
-    )
+    }
 }

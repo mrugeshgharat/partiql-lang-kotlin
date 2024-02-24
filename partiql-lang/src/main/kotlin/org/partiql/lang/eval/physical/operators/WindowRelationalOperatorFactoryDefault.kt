@@ -34,7 +34,7 @@ internal class WindowOperatorDefault(
     private val windowSortSpecList: List<CompiledSortKey>,
     private val compiledWindowFunctions: List<CompiledWindowFunction>
 ) : RelationExpression {
-    override fun evaluate(state: EvaluatorState): RelationIterator {
+    override suspend fun evaluate(state: EvaluatorState): RelationIterator {
         // the following corresponding to materialization process
         val sourceIter = source.evaluate(state)
         val registers = sequence {
@@ -49,7 +49,14 @@ internal class WindowOperatorDefault(
 
         val sortKeys = partitionSortSpec + windowSortSpecList
 
-        val sortedRegisters = registers.sortedWith(getSortingComparator(sortKeys, state))
+        val newRegisters = registers.toList().map { row ->
+            state.load(row)
+            row to sortKeys.map { sk ->
+                sk.value(state)
+            }
+        }.toMutableList()
+
+        val sortedRegisters = newRegisters.sortedWith(getSortingComparator(sortKeys.map { it.comparator })).map { it.first }
 
         // create the partition here
         var partition = mutableListOf<List<Array<ExprValue>>>()

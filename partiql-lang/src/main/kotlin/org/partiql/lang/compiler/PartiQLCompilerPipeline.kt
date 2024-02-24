@@ -114,6 +114,14 @@ class PartiQLCompilerPipeline(
         return compiler.compile(statement, details)
     }
 
+    /**
+     * Compiles a [PartiqlPhysical.Plan] representation of a query into an executable [PartiQLStatement].
+     */
+    @JvmOverloads
+    suspend fun compileAsync(statement: PartiqlPhysical.Plan): PartiQLStatement {
+        return compiler.compileAsync(statement)
+    }
+
     class Builder internal constructor() {
         var parser = PartiQLParserBuilder.standard()
         var planner = PartiQLPlannerBuilder.standard()

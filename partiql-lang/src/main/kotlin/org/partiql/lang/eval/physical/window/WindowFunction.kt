@@ -22,5 +22,5 @@ interface WindowFunction {
     /**
      * Process a row by outputting the result of the window function.
      */
-    fun processRow(state: EvaluatorState, arguments: List<ValueExpression>, windowVarDecl: PartiqlPhysical.VarDecl)
+    suspend fun processRow(state: EvaluatorState, arguments: List<ValueExpression>, windowVarDecl: PartiqlPhysical.VarDecl)
 }

@@ -55,7 +55,7 @@ internal class OffsetOperator(
     private val offset: ValueExpression,
 ) : RelationExpression {
 
-    override fun evaluate(state: EvaluatorState): RelationIterator {
+    override suspend fun evaluate(state: EvaluatorState): RelationIterator {
         val skipCount: Long = evalOffsetRowCount(offset, state)
         val rows = input.evaluate(state)
         return relation(rows.relType) {
@@ -70,7 +70,7 @@ internal class OffsetOperator(
         }
     }
 
-    private fun evalOffsetRowCount(rowCountExpr: ValueExpression, state: EvaluatorState): Long {
+    private suspend fun evalOffsetRowCount(rowCountExpr: ValueExpression, state: EvaluatorState): Long {
         val offsetExprValue = rowCountExpr(state)
         if (offsetExprValue.type != ExprValueType.INT) {
             err(

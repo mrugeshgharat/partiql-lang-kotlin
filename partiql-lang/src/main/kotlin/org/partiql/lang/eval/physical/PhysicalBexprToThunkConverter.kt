@@ -9,6 +9,8 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.Thunk
 import org.partiql.lang.eval.ThunkValue
+import org.partiql.lang.eval.async.ThunkAsync
+import org.partiql.lang.eval.async.ThunkValueAsync
 import org.partiql.lang.eval.physical.operators.AggregateOperatorFactory
 import org.partiql.lang.eval.physical.operators.CompiledAggregateFunction
 import org.partiql.lang.eval.physical.operators.CompiledGroupKey
@@ -27,26 +29,56 @@ import org.partiql.lang.eval.physical.operators.RelationalOperatorKind
 import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.SortOperatorFactory
 import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactory
+import org.partiql.lang.eval.physical.operators.ValueExpression
 import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.valueExpression
 import org.partiql.lang.eval.physical.window.createBuiltinWindowFunction
 import org.partiql.lang.util.toIntExact
 
+/** Converts instances of [PartiqlPhysical.Bexpr] to any [T]. */
+interface Converter<T> {
+    suspend fun convert(node: PartiqlPhysical.Bexpr): T = when (node) {
+        is PartiqlPhysical.Bexpr.Project -> convertProject(node)
+        is PartiqlPhysical.Bexpr.Scan -> convertScan(node)
+        is PartiqlPhysical.Bexpr.Unpivot -> convertUnpivot(node)
+        is PartiqlPhysical.Bexpr.Filter -> convertFilter(node)
+        is PartiqlPhysical.Bexpr.Join -> convertJoin(node)
+        is PartiqlPhysical.Bexpr.Sort -> convertSort(node)
+        is PartiqlPhysical.Bexpr.Aggregate -> convertAggregate(node)
+        is PartiqlPhysical.Bexpr.Offset -> convertOffset(node)
+        is PartiqlPhysical.Bexpr.Limit -> convertLimit(node)
+        is PartiqlPhysical.Bexpr.Let -> convertLet(node)
+        is PartiqlPhysical.Bexpr.Window -> convertWindow(node)
+    }
+
+    suspend fun convertProject(node: PartiqlPhysical.Bexpr.Project): T
+    suspend fun convertScan(node: PartiqlPhysical.Bexpr.Scan): T
+    suspend fun convertUnpivot(node: PartiqlPhysical.Bexpr.Unpivot): T
+    suspend fun convertFilter(node: PartiqlPhysical.Bexpr.Filter): T
+    suspend fun convertJoin(node: PartiqlPhysical.Bexpr.Join): T
+    suspend fun convertSort(node: PartiqlPhysical.Bexpr.Sort): T
+    suspend fun convertAggregate(node: PartiqlPhysical.Bexpr.Aggregate): T
+    suspend fun convertOffset(node: PartiqlPhysical.Bexpr.Offset): T
+    suspend fun convertLimit(node: PartiqlPhysical.Bexpr.Limit): T
+    suspend fun convertLet(node: PartiqlPhysical.Bexpr.Let): T
+    suspend fun convertWindow(node: PartiqlPhysical.Bexpr.Window): T
+}
+
 /** A specialization of [Thunk] that we use for evaluation of physical plans. */
-internal typealias PhysicalPlanThunk = Thunk<EvaluatorState>
+internal typealias PhysicalPlanThunk = ThunkAsync<EvaluatorState>
 
 /** A specialization of [ThunkValue] that we use for evaluation of physical plans. */
-internal typealias PhysicalPlanThunkValue<T> = ThunkValue<EvaluatorState, T>
+internal typealias PhysicalPlanThunkValue<T> = ThunkValueAsync<EvaluatorState, T>
 
 internal class PhysicalBexprToThunkConverter(
     private val exprConverter: PhysicalPlanCompiler,
     private val relationalOperatorFactory: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>
-) : PartiqlPhysical.Bexpr.Converter<RelationThunkEnv> {
+) : Converter<RelationThunkEnv> {
 
-    private fun PhysicalPlanThunk.toValueExpr(sourceLocationMeta: SourceLocationMeta?) =
+    private fun PhysicalPlanThunk.toValueExpr(sourceLocationMeta: SourceLocationMeta?): ValueExpression =
         valueExpression(sourceLocationMeta) { state -> this(state) }
 
-    private fun RelationExpression.toRelationThunk(metas: MetaContainer) = relationThunk(metas) { state -> this.evaluate(state) }
+    private suspend fun RelationExpression.toRelationThunk(metas: MetaContainer) = relationThunk(metas) { state -> this.evaluate(state) }
 
     private inline fun <reified T : RelationalOperatorFactory> findOperatorFactory(
         operator: RelationalOperatorKind,
@@ -62,7 +94,7 @@ internal class PhysicalBexprToThunkConverter(
             )
     }
 
-    override fun convertProject(node: PartiqlPhysical.Bexpr.Project): RelationThunkEnv {
+    override suspend fun convertProject(node: PartiqlPhysical.Bexpr.Project): RelationThunkEnv {
         // recurse into children
         val argExprs = node.args.map { exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta) }
 
@@ -76,7 +108,7 @@ internal class PhysicalBexprToThunkConverter(
         return bindingsExpr.toRelationThunk(node.metas)
     }
 
-    override fun convertAggregate(node: PartiqlPhysical.Bexpr.Aggregate): RelationThunkEnv {
+    override suspend fun convertAggregate(node: PartiqlPhysical.Bexpr.Aggregate): RelationThunkEnv {
         val source = this.convert(node.source)
 
         // Compile Arguments
@@ -93,11 +125,11 @@ internal class PhysicalBexprToThunkConverter(
 
         // Get Implementation
         val factory = findOperatorFactory<AggregateOperatorFactory>(RelationalOperatorKind.AGGREGATE, node.i.name.text)
-        val relationExpression = factory.create(source, node.strategy, compiledKeys, compiledFunctions)
+        val relationExpression = factory.create({ state -> source.invoke(state) }, node.strategy, compiledKeys, compiledFunctions)
         return relationExpression.toRelationThunk(node.metas)
     }
 
-    override fun convertScan(node: PartiqlPhysical.Bexpr.Scan): RelationThunkEnv {
+    override suspend fun convertScan(node: PartiqlPhysical.Bexpr.Scan): RelationThunkEnv {
         // recurse into children
         val valueExpr = exprConverter.convert(node.expr).toValueExpr(node.expr.metas.sourceLocationMeta)
         val asSetter = node.asDecl.toSetVariableFunc()
@@ -120,7 +152,7 @@ internal class PhysicalBexprToThunkConverter(
         return bindingsExpr.toRelationThunk(node.metas)
     }
 
-    override fun convertUnpivot(node: PartiqlPhysical.Bexpr.Unpivot): RelationThunkEnv {
+    override suspend fun convertUnpivot(node: PartiqlPhysical.Bexpr.Unpivot): RelationThunkEnv {
         val valueExpr = exprConverter.convert(node.expr).toValueExpr(node.expr.metas.sourceLocationMeta)
         val asSetter = node.asDecl.toSetVariableFunc()
         val atSetter = node.atDecl?.toSetVariableFunc()
@@ -138,7 +170,7 @@ internal class PhysicalBexprToThunkConverter(
         return bindingsExpr.toRelationThunk(node.metas)
     }
 
-    override fun convertFilter(node: PartiqlPhysical.Bexpr.Filter): RelationThunkEnv {
+    override suspend fun convertFilter(node: PartiqlPhysical.Bexpr.Filter): RelationThunkEnv {
         // recurse into children
         val predicateValueExpr = exprConverter.convert(node.predicate).toValueExpr(node.predicate.metas.sourceLocationMeta)
         val sourceBindingsExpr = this.convert(node.source)
@@ -147,13 +179,13 @@ internal class PhysicalBexprToThunkConverter(
         val factory = findOperatorFactory<FilterRelationalOperatorFactory>(RelationalOperatorKind.FILTER, node.i.name.text)
 
         // create operator implementation
-        val bindingsExpr = factory.create(node.i, predicateValueExpr, sourceBindingsExpr)
+        val bindingsExpr = factory.create(node.i, predicateValueExpr) { state -> sourceBindingsExpr.invoke(state) }
 
         // wrap in thunk
         return bindingsExpr.toRelationThunk(node.metas)
     }
 
-    override fun convertJoin(node: PartiqlPhysical.Bexpr.Join): RelationThunkEnv {
+    override suspend fun convertJoin(node: PartiqlPhysical.Bexpr.Join): RelationThunkEnv {
         // recurse into children
         val leftBindingsExpr = this.convert(node.left)
         val rightBindingdExpr = this.convert(node.right)
@@ -182,8 +214,8 @@ internal class PhysicalBexprToThunkConverter(
         return factory.create(
             impl = node.i,
             joinType = node.joinType,
-            leftBexpr = leftBindingsExpr,
-            rightBexpr = rightBindingdExpr,
+            leftBexpr = { state -> leftBindingsExpr.invoke(state) },
+            rightBexpr = { state -> rightBindingdExpr.invoke(state) },
             predicateExpr = predicateValueExpr,
             setLeftSideVariablesToNull = setLeftSideVariablesToNull,
             setRightSideVariablesToNull = setRightSideVariablesToNull
@@ -211,7 +243,7 @@ internal class PhysicalBexprToThunkConverter(
             }
         }.walkBexpr(this, emptyList())
 
-    override fun convertOffset(node: PartiqlPhysical.Bexpr.Offset): RelationThunkEnv {
+    override suspend fun convertOffset(node: PartiqlPhysical.Bexpr.Offset): RelationThunkEnv {
         // recurse into children
         val rowCountExpr = exprConverter.convert(node.rowCount).toValueExpr(node.rowCount.metas.sourceLocationMeta)
         val sourceBexpr = this.convert(node.source)
@@ -220,12 +252,12 @@ internal class PhysicalBexprToThunkConverter(
         val factory = findOperatorFactory<OffsetRelationalOperatorFactory>(RelationalOperatorKind.OFFSET, node.i.name.text)
 
         // create operator implementation
-        val bindingsExpr = factory.create(node.i, rowCountExpr, sourceBexpr)
+        val bindingsExpr = factory.create(node.i, rowCountExpr) { state -> sourceBexpr.invoke(state) }
         // wrap in thunk
         return bindingsExpr.toRelationThunk(node.metas)
     }
 
-    override fun convertLimit(node: PartiqlPhysical.Bexpr.Limit): RelationThunkEnv {
+    override suspend fun convertLimit(node: PartiqlPhysical.Bexpr.Limit): RelationThunkEnv {
         // recurse into children
         val rowCountExpr = exprConverter.convert(node.rowCount).toValueExpr(node.rowCount.metas.sourceLocationMeta)
         val sourceBexpr = this.convert(node.source)
@@ -234,24 +266,24 @@ internal class PhysicalBexprToThunkConverter(
         val factory = findOperatorFactory<LimitRelationalOperatorFactory>(RelationalOperatorKind.LIMIT, node.i.name.text)
 
         // create operator implementation
-        val bindingsExpr = factory.create(node.i, rowCountExpr, sourceBexpr)
+        val bindingsExpr = factory.create(node.i, rowCountExpr) { state -> sourceBexpr.invoke(state) }
 
         // wrap in thunk
         return bindingsExpr.toRelationThunk(node.metas)
     }
 
-    override fun convertSort(node: PartiqlPhysical.Bexpr.Sort): RelationThunkEnv {
+    override suspend fun convertSort(node: PartiqlPhysical.Bexpr.Sort): RelationThunkEnv {
         // Compile Arguments
         val source = this.convert(node.source)
         val sortKeys = compileSortSpecs(node.sortSpecs)
 
         // Get Implementation
         val factory = findOperatorFactory<SortOperatorFactory>(RelationalOperatorKind.SORT, node.i.name.text)
-        val bindingsExpr = factory.create(sortKeys, source)
+        val bindingsExpr = factory.create(sortKeys) { state -> source.invoke(state) }
         return bindingsExpr.toRelationThunk(node.metas)
     }
 
-    override fun convertLet(node: PartiqlPhysical.Bexpr.Let): RelationThunkEnv {
+    override suspend fun convertLet(node: PartiqlPhysical.Bexpr.Let): RelationThunkEnv {
         // recurse into children
         val sourceBexpr = this.convert(node.source)
         val compiledBindings = node.bindings.map {
@@ -264,7 +296,7 @@ internal class PhysicalBexprToThunkConverter(
         val factory = findOperatorFactory<LetRelationalOperatorFactory>(RelationalOperatorKind.LET, node.i.name.text)
 
         // create operator implementation
-        val bindingsExpr = factory.create(node.i, sourceBexpr, compiledBindings)
+        val bindingsExpr = factory.create(node.i, { state -> sourceBexpr.invoke(state) }, compiledBindings)
 
         // wrap in thunk
         return bindingsExpr.toRelationThunk(node.metas)
@@ -274,7 +306,7 @@ internal class PhysicalBexprToThunkConverter(
      * Returns a list of [CompiledSortKey] with the aim of pre-computing the [NaturalExprValueComparators] prior to
      * evaluation and leaving the [PartiqlPhysical.SortSpec]'s [PartiqlPhysical.Expr] to be evaluated later.
      */
-    private fun compileSortSpecs(specs: List<PartiqlPhysical.SortSpec>): List<CompiledSortKey> = specs.map { spec ->
+    private suspend fun compileSortSpecs(specs: List<PartiqlPhysical.SortSpec>): List<CompiledSortKey> = specs.map { spec ->
         val comp = when (spec.orderingSpec ?: PartiqlPhysical.OrderingSpec.Asc()) {
             is PartiqlPhysical.OrderingSpec.Asc ->
                 when (spec.nullsSpec) {
@@ -295,7 +327,7 @@ internal class PhysicalBexprToThunkConverter(
     }
 
     @OptIn(ExperimentalWindowFunctions::class)
-    override fun convertWindow(node: PartiqlPhysical.Bexpr.Window): RelationThunkEnv {
+    override suspend fun convertWindow(node: PartiqlPhysical.Bexpr.Window): RelationThunkEnv {
         val source = this.convert(node.source)
 
         val windowPartitionList = node.windowSpecification.partitionBy
@@ -320,7 +352,7 @@ internal class PhysicalBexprToThunkConverter(
         val factory = findOperatorFactory<WindowRelationalOperatorFactory>(RelationalOperatorKind.WINDOW, node.i.name.text)
 
         // create operator implementation
-        val bindingsExpr = factory.create(source, compiledPartitionBy, compiledOrderBy, compiledWindowFunctions)
+        val bindingsExpr = factory.create({ state -> source.invoke(state) }, compiledPartitionBy, compiledOrderBy, compiledWindowFunctions)
         // wrap in thunk
         return bindingsExpr.toRelationThunk(node.metas)
     }

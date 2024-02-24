@@ -60,7 +60,7 @@ internal class ScanOperator(
     private val setByVar: SetVariableFunc?
 ) : RelationExpression {
 
-    override fun evaluate(state: EvaluatorState): RelationIterator {
+    override suspend fun evaluate(state: EvaluatorState): RelationIterator {
         val value = expr(state)
         val sequence: Sequence<ExprValue> = when (value.type) {
             ExprValueType.LIST,

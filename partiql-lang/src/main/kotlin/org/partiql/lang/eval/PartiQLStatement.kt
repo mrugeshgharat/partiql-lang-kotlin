@@ -19,5 +19,5 @@ package org.partiql.lang.eval
  */
 fun interface PartiQLStatement {
 
-    fun eval(session: EvaluationSession): PartiQLResult
+    suspend fun eval(session: EvaluationSession): PartiQLResult
 }

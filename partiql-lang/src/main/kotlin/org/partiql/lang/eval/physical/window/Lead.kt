@@ -16,7 +16,7 @@ internal class Lead : NavigationWindowFunction() {
         const val DEFAULT_OFFSET_VALUE = 1L
     }
 
-    override fun processRow(state: EvaluatorState, arguments: List<ValueExpression>, currentPos: Int): ExprValue {
+    override suspend fun processRow(state: EvaluatorState, arguments: List<ValueExpression>, currentPos: Int): ExprValue {
         val (target, offset, default) = when (arguments.size) {
             1 -> listOf(arguments[0], null, null)
             2 -> listOf(arguments[0], arguments[1], null)

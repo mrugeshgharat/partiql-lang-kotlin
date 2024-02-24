@@ -15,6 +15,7 @@
 package org.partiql.lang.compiler
 
 import com.amazon.ionelement.api.ionInt
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
@@ -46,7 +47,7 @@ class PartiQLCompilerPipelineExplainTests {
 
     private fun runSuccessTest(tc: ExplainTestCase) {
         val statement = compiler.compile(tc.query)
-        val result = statement.eval(tc.session)
+        val result = runBlocking { statement.eval(tc.session) }
         assertEquals(tc.expected, result)
     }
 

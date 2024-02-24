@@ -26,6 +26,7 @@ dependencies {
     implementation(project(":partiql-lang"))
     implementation(project(":partiql-types"))
     implementation(Deps.awsSdkS3)
+    implementation(Deps.kotlinxCoroutines)
 }
 
 // Version 1.7+ removes the requirement for such compiler option.

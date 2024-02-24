@@ -22,7 +22,7 @@ abstract class NavigationWindowFunction() : WindowFunction {
         currentPos = 0
     }
 
-    override fun processRow(
+    override suspend fun processRow(
         state: EvaluatorState,
         arguments: List<ValueExpression>,
         windowVarDecl: PartiqlPhysical.VarDecl
@@ -38,5 +38,5 @@ abstract class NavigationWindowFunction() : WindowFunction {
         currentPos += 1
     }
 
-    abstract fun processRow(state: EvaluatorState, arguments: List<ValueExpression>, currentPos: Int): ExprValue
+    abstract suspend fun processRow(state: EvaluatorState, arguments: List<ValueExpression>, currentPos: Int): ExprValue
 }

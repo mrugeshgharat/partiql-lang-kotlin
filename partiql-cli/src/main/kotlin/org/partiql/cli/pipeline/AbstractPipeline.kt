@@ -20,6 +20,7 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
 import com.amazon.ionelement.api.toIonValue
+import kotlinx.coroutines.runBlocking
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.cli.Debug
 import org.partiql.cli.functions.QueryDDB
@@ -193,7 +194,10 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
                     .options(evaluatorOptions)
                     .build(),
             )
-            return pipeline.compile(input).eval(session)
+            val statement = pipeline.compile(input)
+            return runBlocking {
+                statement.eval(session)
+            }
         }
 
         private fun createGlobalVariableResolver(session: EvaluationSession) = GlobalVariableResolver {

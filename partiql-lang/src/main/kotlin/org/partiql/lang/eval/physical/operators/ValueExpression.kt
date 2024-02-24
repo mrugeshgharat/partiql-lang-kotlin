@@ -13,7 +13,7 @@ import org.partiql.lang.eval.physical.EvaluatorState
  */
 interface ValueExpression {
     /** Evaluates the expression. */
-    operator fun invoke(state: EvaluatorState): ExprValue
+    suspend operator fun invoke(state: EvaluatorState): ExprValue
 
     /** Provides the source location (line & column) of the expression, for error reporting purposes. */
     val sourceLocation: SourceLocationMeta?
@@ -22,9 +22,10 @@ interface ValueExpression {
 /** Convenience constructor for [ValueExpression]. */
 internal inline fun valueExpression(
     sourceLocation: SourceLocationMeta?,
-    crossinline invoke: (EvaluatorState) -> ExprValue
-) =
-    object : ValueExpression {
-        override fun invoke(state: EvaluatorState): ExprValue = invoke(state)
+    crossinline invoke: suspend (EvaluatorState) -> ExprValue
+): ValueExpression {
+    return object : ValueExpression {
+        override suspend fun invoke(state: EvaluatorState): ExprValue = invoke(state)
         override val sourceLocation: SourceLocationMeta? get() = sourceLocation
     }
+}

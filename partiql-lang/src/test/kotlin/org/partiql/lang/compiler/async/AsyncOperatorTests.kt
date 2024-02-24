@@ -2,6 +2,7 @@ package org.partiql.lang.compiler.async
 
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -91,12 +92,16 @@ class AsyncOperatorTests {
                 locals = listOf(localVariable("_1", 0))
             )
         }
-        val statement = pipeline.compile(plan)
-        repeat(10) { index ->
-            print("Compiling $index. ")
-            val result = statement.eval(EvaluationSession.standard()) as PartiQLResult.Value
-            println("About to print value; $index")
-            println(result.value)
+        runBlocking {
+            val statement = pipeline.compileAsync(plan)
+            repeat(10) { index ->
+                async {
+                    print("Compiling $index. ")
+                    val result = statement.eval(EvaluationSession.standard()) as PartiQLResult.Value
+                    println("About to print value; $index")
+                    println(result.value)
+                }
+            }
         }
     }
 }
