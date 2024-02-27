@@ -31,7 +31,7 @@ class PreventJoinVisitorExample(out: PrintStream) : Example(out) {
     }
 
     /** Ensures no exception is thrown when the query doesn't contain a JOIN. */
-    override fun run() {
+    override suspend fun run() {
         val queryWithoutJoi = "SELECT foo FROM bar"
         print("PartiQL query without JOINs:", queryWithoutJoi)
         print("Has joins:", hasJoins(queryWithoutJoi).toString())

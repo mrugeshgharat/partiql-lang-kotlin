@@ -13,7 +13,7 @@ import java.io.PrintStream
 class ParserExample(out: PrintStream) : Example(out) {
 
     /** Demonstrates query parsing and SerDe.  */
-    override fun run() {
+    override suspend fun run() {
         // An instance of [Parser].
         val parser: Parser = PartiQLParserBuilder().build()
 

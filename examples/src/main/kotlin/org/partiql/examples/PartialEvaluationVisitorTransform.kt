@@ -82,7 +82,7 @@ private class PartialEvaluationVisitorTransform(val ion: IonSystem, val compileO
 class PartialEvaluationVisitorTransformExample(out: PrintStream) : Example(out) {
     private val ion = IonSystemBuilder.standard().build()
 
-    override fun run() {
+    override suspend fun run() {
         val pipeline = CompilerPipeline.build {
             addPreprocessingStep { originalAst, stepContext ->
                 val visitorTransformer = PartialEvaluationVisitorTransform(ion, stepContext.compileOptions)

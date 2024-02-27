@@ -61,7 +61,6 @@ internal class SortOperatorDefault(private val sortKeys: List<CompiledSortKey>, 
     }
 }
 
-
 /**
  * Returns a [Comparator] that compares arrays of registers by using un-evaluated sort keys. It does this by modifying
  * the [state] to allow evaluation of the [sortKeys]

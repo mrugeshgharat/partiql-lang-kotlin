@@ -10,11 +10,11 @@ import kotlin.test.assertEquals
 class VisitorTransformBaseTestAdapter : EvaluatorTestAdapter {
     private val defaultTransformer = object : VisitorTransformBase() {}
 
-    override fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
+    override suspend fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
         testVistorTransformBase(tc)
     }
 
-    override fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
+    override suspend fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
         testVistorTransformBase(tc)
     }
 

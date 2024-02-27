@@ -14,6 +14,7 @@
 
 package org.partiql.lang.eval.visitors
 
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.errors.ErrorCode
@@ -33,7 +34,9 @@ internal class AggregationVisitorTransformTests : VisitorTransformTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ErrorArgumentsProvider::class)
-    internal fun errorTests(tc: TransformErrorTestCase) = runErrorTest(tc, AggregationVisitorTransform())
+    internal fun errorTests(tc: TransformErrorTestCase) = runTest {
+        runErrorTest(tc, AggregationVisitorTransform())
+    }
 
     internal class ValidArgumentsProvider : ArgumentsProviderBase() {
         override fun getParameters() = listOf(

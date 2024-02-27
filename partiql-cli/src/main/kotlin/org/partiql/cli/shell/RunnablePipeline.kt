@@ -14,6 +14,7 @@
 
 package org.partiql.cli.shell
 
+import kotlinx.coroutines.runBlocking
 import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.PartiQLResult
@@ -40,7 +41,7 @@ internal class RunnablePipeline(
             val input = inputs.poll(3, TimeUnit.SECONDS)
             if (input != null) {
                 try {
-                    val result = pipeline.compile(input.input, input.session)
+                    val result = runBlocking { pipeline.compile(input.input, input.session) }
                     results.put(Output.Result(result))
                 } catch (t: Throwable) {
                     results.put(Output.Error(t))

@@ -56,21 +56,21 @@ internal class Cli(
             .withWriteTopLevelValuesOnNewLines(true)
     }
 
-    internal fun run() {
+    internal suspend fun run() {
         when (inputFormat) {
             PartiQLCommand.InputFormat.ION -> runWithIonInput()
             PartiQLCommand.InputFormat.PARTIQL -> runWithPartiQLInput()
         }
     }
 
-    private fun runWithIonInput() {
+    private suspend fun runWithIonInput() {
         when (wrapIon) {
             true -> runWithIonInputWrapped()
             false -> runWithIonInputDefault()
         }
     }
 
-    private fun runWithIonInputDefault() {
+    private suspend fun runWithIonInputDefault() {
         IonReaderBuilder.standard().build(input).use { reader ->
             val bindings = when (reader.next()) {
                 null -> Bindings.buildLazyBindings<ExprValue> {}.delegate(globals)
@@ -93,7 +93,7 @@ internal class Cli(
         }
     }
 
-    private fun runWithIonInputWrapped() {
+    private suspend fun runWithIonInputWrapped() {
         IonReaderBuilder.standard().build(input).use { reader ->
             val inputIonValue = ion.iterate(reader).asSequence().map { ExprValue.of(it) }
             val inputExprValue = ExprValue.newBag(inputIonValue)
@@ -109,7 +109,7 @@ internal class Cli(
         }
     }
 
-    private fun runWithPartiQLInput() {
+    private suspend fun runWithPartiQLInput() {
         val inputEnvironment = compilerPipeline.compile(
             input.readBytes().toString(Charsets.UTF_8),
             EvaluationSession.build {

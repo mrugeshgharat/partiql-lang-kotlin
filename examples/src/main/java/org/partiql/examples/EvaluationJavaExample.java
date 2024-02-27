@@ -17,6 +17,7 @@ package org.partiql.examples;
 import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.examples.util.Example;
+import org.partiql.examples.util.JavaExample;
 import org.partiql.lang.CompilerPipeline;
 import org.partiql.lang.eval.Bindings;
 import org.partiql.lang.eval.EvaluationSession;
@@ -31,7 +32,7 @@ import static java.util.Collections.singletonMap;
 /**
  * This example demonstrates evaluating a PartiQL query against values defined in the global environment.
  */
-public class EvaluationJavaExample extends Example {
+public class EvaluationJavaExample extends JavaExample {
 
     public EvaluationJavaExample(@NotNull PrintStream out) {
         super(out);

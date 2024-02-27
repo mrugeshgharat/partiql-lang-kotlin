@@ -24,7 +24,7 @@ internal class CompilerPipelineFactory : PipelineFactory {
             override val typingMode: TypingMode
                 get() = concretePipeline.compileOptions.typingMode
 
-            override fun evaluate(query: String): ExprValue =
+            override suspend fun evaluate(query: String): ExprValue =
                 concretePipeline.compile(query).eval(session)
         }
     }

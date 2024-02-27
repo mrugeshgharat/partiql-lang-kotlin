@@ -14,6 +14,7 @@
 
 package org.partiql.cli.pico
 
+import kotlinx.coroutines.runBlocking
 import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
@@ -95,7 +96,7 @@ internal class PipelineOptions {
         get() {
             if (environmentFile == null) return Bindings.empty()
             val configSource = environmentFile!!.readText(charset("UTF-8"))
-            val config = pipeline.compile(configSource, EvaluationSession.standard()) as PartiQLResult.Value
+            val config = runBlocking { pipeline.compile(configSource, EvaluationSession.standard()) as PartiQLResult.Value } // TODO ALAN some other interface or way to call compile from property
             return config.value.bindings
         }
 }

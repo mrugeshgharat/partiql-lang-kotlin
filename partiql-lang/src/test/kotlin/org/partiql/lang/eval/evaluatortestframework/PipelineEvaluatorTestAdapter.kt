@@ -15,7 +15,7 @@ internal class PipelineEvaluatorTestAdapter(
     private val pipelineFactory: PipelineFactory
 ) : EvaluatorTestAdapter {
 
-    override fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
+    override suspend fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
         // Skip execution of this test case if it does not apply to the pipeline supplied by pipelineFactory.
         if (tc.targetPipeline != EvaluatorTestTarget.ALL_PIPELINES && pipelineFactory.target != tc.targetPipeline) {
             return
@@ -44,7 +44,7 @@ internal class PipelineEvaluatorTestAdapter(
     /**
      * Runs the give test case once with the specified [session].
      */
-    private fun privateRunEvaluatorTestCase(
+    private suspend fun privateRunEvaluatorTestCase(
         tc: EvaluatorTestCase,
         session: EvaluationSession,
         note: String,
@@ -117,7 +117,7 @@ internal class PipelineEvaluatorTestAdapter(
     }
 
     /** Runs an [EvaluatorErrorTestCase] once. */
-    private fun privateRunEvaluatorErrorTestCase(
+    private suspend fun privateRunEvaluatorErrorTestCase(
         tc: EvaluatorErrorTestCase,
         session: EvaluationSession,
         note: String
@@ -162,7 +162,7 @@ internal class PipelineEvaluatorTestAdapter(
         tc.additionalExceptionAssertBlock(ex)
     }
 
-    override fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
+    override suspend fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
         // Skip execution of this test case if it does not apply to the pipeline supplied by pipelineFactory.
         if (tc.targetPipeline != EvaluatorTestTarget.ALL_PIPELINES && pipelineFactory.target != tc.targetPipeline) {
             return

@@ -14,10 +14,24 @@
 
 package org.partiql.lang.eval
 
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.future.future
+import java.util.concurrent.CompletableFuture
+
 /**
  * A compiled PartiQL statement
  */
 fun interface PartiQLStatement {
 
     suspend fun eval(session: EvaluationSession): PartiQLResult
+}
+
+/**
+ * Java does not support Kotlin co-routines. This function is meant to call [PartiQLStatement.eval] and return back
+ * a [CompletableFuture] for Java interoperability.
+ */
+@OptIn(DelicateCoroutinesApi::class)
+fun evalToFuture(statement: PartiQLStatement, session: EvaluationSession): CompletableFuture<PartiQLResult> {
+    return GlobalScope.future { statement.eval(session) }
 }

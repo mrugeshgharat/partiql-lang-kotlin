@@ -27,6 +27,8 @@ import org.partiql.lang.syntax.PartiQLParserBuilder
 /**
  * [PartiQLCompilerPipeline] is the top-level class for embedded usage of PartiQL.
  *
+ *
+ * TODO ALAN update below usage
  * Example usage:
  * ```
  * val pipeline = PartiQLCompilerPipeline.standard()
@@ -86,6 +88,7 @@ class PartiQLCompilerPipeline(
         }
     }
 
+    // TODO ALAN determine whether these `compile` (synchronous versions) should still be here or make `suspend`
     /**
      * Compiles a PartiQL query into an executable [PartiQLStatement].
      */
@@ -113,13 +116,34 @@ class PartiQLCompilerPipeline(
     fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails = PartiQLPlanner.PlanningDetails()): PartiQLStatement {
         return compiler.compile(statement, details)
     }
+    // TODO ALAN end of synchronous `compile` functions
+
+    /**
+     * Compiles a PartiQL query into an executable [PartiQLStatement].
+     */
+    suspend fun compileAsync(statement: String): PartiQLStatement {
+        val ast = parser.parseAstStatement(statement)
+        return compileAsync(ast)
+    }
+
+    /**
+     * Compiles a [PartiqlAst.Statement] representation of a query into an executable [PartiQLStatement].
+     */
+    suspend fun compileAsync(statement: PartiqlAst.Statement): PartiQLStatement {
+        val result = planner.plan(statement)
+        if (result is PartiQLPlanner.Result.Error) {
+            throw PartiQLException(result.problems.toString())
+        }
+        val plan = (result as PartiQLPlanner.Result.Success).plan
+        return compileAsync(plan, result.details)
+    }
 
     /**
      * Compiles a [PartiqlPhysical.Plan] representation of a query into an executable [PartiQLStatement].
      */
     @JvmOverloads
-    suspend fun compileAsync(statement: PartiqlPhysical.Plan): PartiQLStatement {
-        return compiler.compileAsync(statement)
+    suspend fun compileAsync(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails = PartiQLPlanner.PlanningDetails()): PartiQLStatement {
+        return compiler.compileAsync(statement, details)
     }
 
     class Builder internal constructor() {

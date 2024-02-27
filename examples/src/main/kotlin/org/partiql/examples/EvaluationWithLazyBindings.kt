@@ -13,7 +13,7 @@ class EvaluationWithLazyBindings(out: PrintStream) : Example(out) {
     val ion = IonSystemBuilder.standard().build()
     val pipeline = CompilerPipeline.standard()
 
-    override fun run() {
+    override suspend fun run() {
         // Compile a simple SELECT query
         val query = "SELECT p.name AS kitten_id FROM pets AS p WHERE age >= 4"
         print("PartiQL query:", query)

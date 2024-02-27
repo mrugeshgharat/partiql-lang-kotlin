@@ -12,7 +12,7 @@ interface EvaluatorTestAdapter {
      *
      * @see [EvaluatorTestCase].
      */
-    fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession)
+    suspend fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession)
 
     /**
      * Runs an [EvaluatorErrorTestCase].  This should be the normal entry point for parameterized error test cases.
@@ -22,5 +22,5 @@ interface EvaluatorTestAdapter {
      * [EvaluatorErrorTestCase.expectedPermissiveModeResult] (PartiQL equivalence.)  Otherwise, the error assertions
      * are the same as [TypingMode.LEGACY]
      */
-    fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession)
+    suspend fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession)
 }

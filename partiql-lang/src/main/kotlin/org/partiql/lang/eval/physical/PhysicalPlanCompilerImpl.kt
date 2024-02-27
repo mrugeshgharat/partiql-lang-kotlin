@@ -213,35 +213,36 @@ internal class PhysicalPlanCompilerImpl(
      * and throws [InterruptedException] if [Thread.interrupted] it has been set in the
      * hope that long-running compilations may be aborted by the caller.
      */
-    internal fun compile(expr: PartiqlPhysical.Expr, localsSize: Int): Expression {
-        val thunk = runBlocking { compileAstExpr(expr) }
+    internal suspend fun compile(expr: PartiqlPhysical.Expr, localsSize: Int): Expression {
+        val thunk = compileAstExpr(expr)
 
         return object : Expression {
             override val coverageStructure: CoverageStructure? = null
 
             override fun eval(session: EvaluationSession): ExprValue {
-                val thunk = runBlocking { compileAstExpr(expr) }
                 val env = EvaluatorState(
                     session = session,
                     registers = Array(localsSize) { ExprValue.missingValue }
                 )
-                TODO()
-//                return thunk(env)
+                return runBlocking { thunk(env) }
             }
 
             override fun evaluate(session: EvaluationSession): PartiQLResult {
-                val thunk = runBlocking { compileAstExpr(expr) }
                 val env = EvaluatorState(
                     session = session,
                     registers = Array(localsSize) { ExprValue.missingValue }
                 )
-                TODO()
-//                val value = thunk(env)
-//                return PartiQLResult.Value(value = value)
+                val value = runBlocking { thunk(env) }
+                return PartiQLResult.Value(value = value)
             }
 
             override suspend fun evalAsync(session: EvaluationSession): PartiQLResult {
-                TODO("todo evalAsync")
+                val env = EvaluatorState(
+                    session = session,
+                    registers = Array(localsSize) { ExprValue.missingValue }
+                )
+                val value = runBlocking { thunk(env) }
+                return PartiQLResult.Value(value = value)
             }
         }
     }

@@ -19,6 +19,7 @@ import com.amazon.ion.system.IonTextWriterBuilder;
 import com.amazon.ionelement.api.SexpElement;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.examples.util.Example;
+import org.partiql.examples.util.JavaExample;
 import org.partiql.lang.domains.PartiqlAst;
 import org.partiql.lang.syntax.Parser;
 import org.partiql.lang.syntax.PartiQLParserBuilder;
@@ -28,7 +29,7 @@ import java.io.PrintStream;
 /**
  * This example demonstrates producing a PartiQL AST from a PartiQL query.
  */
-public class ParserJavaExample extends Example {
+public class ParserJavaExample extends JavaExample {
 
     public ParserJavaExample(@NotNull PrintStream out) {
         super(out);

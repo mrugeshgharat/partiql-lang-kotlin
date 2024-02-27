@@ -20,7 +20,6 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
 import com.amazon.ionelement.api.toIonValue
-import kotlinx.coroutines.runBlocking
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.cli.Debug
 import org.partiql.cli.functions.QueryDDB
@@ -55,7 +54,7 @@ import java.time.ZoneOffset
  */
 internal sealed class AbstractPipeline(open val options: PipelineOptions) {
 
-    abstract fun compile(input: String, session: EvaluationSession): PartiQLResult
+    abstract suspend fun compile(input: String, session: EvaluationSession): PartiQLResult
 
     companion object {
         internal fun create(options: PipelineOptions): AbstractPipeline = when (options.pipeline) {
@@ -122,7 +121,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
      */
     internal class PipelineDebug(options: PipelineOptions) : AbstractPipeline(options) {
 
-        override fun compile(input: String, session: EvaluationSession): PartiQLResult {
+        override suspend fun compile(input: String, session: EvaluationSession): PartiQLResult {
             val (message, status) = try {
                 Debug.action(input, session) to 0L
             } catch (e: Exception) {
@@ -157,7 +156,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             sqlParser(options.parser)
         }
 
-        override fun compile(input: String, session: EvaluationSession): PartiQLResult {
+        override suspend fun compile(input: String, session: EvaluationSession): PartiQLResult {
             val exprValue = compilerPipeline.compile(input).eval(session)
             return PartiQLResult.Value(exprValue)
         }
@@ -182,7 +181,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             typedOpBehavior = options.typedOpBehavior
         )
 
-        override fun compile(input: String, session: EvaluationSession): PartiQLResult {
+        override suspend fun compile(input: String, session: EvaluationSession): PartiQLResult {
             val globalVariableResolver = createGlobalVariableResolver(session)
             val pipeline = PartiQLCompilerPipeline(
                 parser = options.parser,
@@ -194,10 +193,8 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
                     .options(evaluatorOptions)
                     .build(),
             )
-            val statement = pipeline.compile(input)
-            return runBlocking {
-                statement.eval(session)
-            }
+            val statement = pipeline.compileAsync(input)
+            return statement.eval(session)
         }
 
         private fun createGlobalVariableResolver(session: EvaluationSession) = GlobalVariableResolver {

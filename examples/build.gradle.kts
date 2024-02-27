@@ -27,6 +27,9 @@ dependencies {
     implementation(project(":partiql-types"))
     implementation(Deps.awsSdkS3)
     implementation(Deps.kotlinxCoroutines)
+    implementation(Deps.kotlinxCoroutinesJdk8)
+
+    testImplementation(Deps.kotlinxCoroutinesTest)
 }
 
 // Version 1.7+ removes the requirement for such compiler option.

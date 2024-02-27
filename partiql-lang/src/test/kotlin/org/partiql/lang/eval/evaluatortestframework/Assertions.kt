@@ -13,10 +13,10 @@ internal fun assertEquals(
     }
 }
 
-internal fun <T> assertDoesNotThrow(
+internal suspend fun <T> assertDoesNotThrow(
     reason: EvaluatorTestFailureReason,
     detailsBlock: () -> String,
-    block: () -> T
+    block: suspend () -> T
 ): T {
     try {
         return block()
@@ -25,10 +25,10 @@ internal fun <T> assertDoesNotThrow(
     }
 }
 
-internal inline fun assertThrowsSqlException(
+internal suspend inline fun assertThrowsSqlException(
     reason: EvaluatorTestFailureReason,
     detailsBlock: () -> String,
-    block: () -> Unit
+    crossinline block: suspend () -> Unit
 ): SqlException {
     try {
         block()

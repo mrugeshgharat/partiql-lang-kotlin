@@ -15,6 +15,7 @@
 package org.partiql.cli.pico
 
 import com.amazon.ion.IonSystem
+import kotlinx.coroutines.runBlocking
 import org.partiql.cli.query.Cli
 import org.partiql.cli.shell.Shell
 import org.partiql.cli.utils.EmptyInputStream
@@ -64,8 +65,8 @@ internal class PartiQLCommand(private val ion: IonSystem) : Runnable {
         val command = executionOptions ?: ExecutionOptions()
         val shell = shellOptions ?: ShellOptions()
         when {
-            command.query != null -> runCli(command, command.query!!.inputStream())
-            System.console() == null -> runCli(command, System.`in`)
+            command.query != null -> runBlocking { runCli(command, command.query!!.inputStream()) }
+            System.console() == null -> runBlocking { runCli(command, System.`in`) }
             else -> runShell(shell)
         }
     }
@@ -73,7 +74,7 @@ internal class PartiQLCommand(private val ion: IonSystem) : Runnable {
     /**
      * Runs the CLI
      */
-    private fun runCli(exec: ExecutionOptions, stream: InputStream) {
+    private suspend fun runCli(exec: ExecutionOptions, stream: InputStream) {
         val input = when (exec.inputFile) {
             null -> EmptyInputStream()
             else -> FileInputStream(exec.inputFile!!)

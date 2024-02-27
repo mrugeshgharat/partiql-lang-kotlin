@@ -33,7 +33,7 @@ interface PartiQLCompiler {
     /**
      * Compiles the [PartiqlPhysical.Plan] to an executable [PartiQLStatement].
      */
-    suspend fun compileAsync(statement: PartiqlPhysical.Plan): PartiQLStatement
+    suspend fun compileAsync(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails): PartiQLStatement
 
     /**
      * Compiles the [PartiqlPhysical.Statement.Explain] with the details provided in [details]

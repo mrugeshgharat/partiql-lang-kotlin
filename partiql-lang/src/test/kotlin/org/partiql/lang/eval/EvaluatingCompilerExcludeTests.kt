@@ -1,6 +1,8 @@
 package org.partiql.lang.eval
 
 import com.amazon.ionelement.api.emptyMetaContainer
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.domains.PartiqlAst
@@ -812,12 +814,15 @@ class EvaluatingCompilerExcludeTests : EvaluatorTestBase() {
         )
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @ParameterizedTest
     @ArgumentsSource(ExcludeTests::class)
-    fun validExcludeTests(tc: EvaluatorTestCase) = testHarness.runEvaluatorTestCase(
-        tc,
-        EvaluationSession.standard()
-    )
+    fun validExcludeTests(tc: EvaluatorTestCase) = runTest {
+        testHarness.runEvaluatorTestCase(
+            tc,
+            EvaluationSession.standard()
+        )
+    }
 
     private fun testExcludeExprSubsumption(tc: SubsumptionTC) {
         val parser = PartiQLParserBuilder.standard().build()

@@ -6,11 +6,11 @@ import org.partiql.lang.eval.EvaluationSession
 class MultipleTestAdapter(
     private val adapters: List<EvaluatorTestAdapter>
 ) : EvaluatorTestAdapter {
-    override fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
+    override suspend fun runEvaluatorTestCase(tc: EvaluatorTestCase, session: EvaluationSession) {
         adapters.forEach { it.runEvaluatorTestCase(tc, session) }
     }
 
-    override fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
+    override suspend fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession) {
         adapters.forEach { it.runEvaluatorErrorTestCase(tc, session) }
     }
 }

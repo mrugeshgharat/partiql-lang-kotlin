@@ -1,5 +1,7 @@
 package org.partiql.lang.compiler
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -21,7 +23,7 @@ class TestContext {
     private val queryEngine = QueryEngine(db)
 
     // Executes query
-    fun executeAndAssert(
+    suspend fun executeAndAssert(
         expectedResultAsIonText: String,
         sql: String,
     ) {
@@ -36,11 +38,11 @@ class TestContext {
 /**
  * Tests the query planner with some basic DML and SFW queries against using [QueryEngine] and [MemoryDatabase].
  */
-
+@OptIn(ExperimentalCoroutinesApi::class)
 class IntegrationTests {
 
     @Test
-    fun `insert, select and delete`() {
+    fun `insert, select and delete`() = runTest {
         val ctx = TestContext()
         val db = ctx.db
         val customerMetadata = db.findTableMetadata(BindingName("customer", BindingCase.SENSITIVE))!!
@@ -86,7 +88,7 @@ class IntegrationTests {
     }
 
     @Test
-    fun `insert with select`() {
+    fun `insert with select`() = runTest {
         val ctx = TestContext()
         val db = ctx.db
         // first put some data into the customer table

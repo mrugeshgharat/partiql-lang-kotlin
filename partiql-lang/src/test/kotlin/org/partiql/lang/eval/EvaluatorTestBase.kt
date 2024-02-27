@@ -16,6 +16,8 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.partiql.errors.ErrorCode
 import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.CUSTOM_TEST_TYPES
@@ -94,6 +96,7 @@ abstract class EvaluatorTestBase : TestBase() {
      *
      * @see [EvaluatorTestCase]
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     protected fun runEvaluatorTestCase(
         query: String,
         session: EvaluationSession = EvaluationSession.standard(),
@@ -105,7 +108,7 @@ abstract class EvaluatorTestBase : TestBase() {
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
         extraResultAssertions: (ExprValue) -> Unit = { }
-    ) {
+    ) = runTest {
         val tc = EvaluatorTestCase(
             query = query,
             expectedResult = expectedResult,
@@ -125,13 +128,16 @@ abstract class EvaluatorTestBase : TestBase() {
      *
      * @see [EvaluatorTestCase].
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     protected fun runEvaluatorTestCase(
         tc: EvaluatorTestCase,
         session: EvaluationSession = EvaluationSession.standard()
-    ) =
+    ) = runTest {
         testHarness.runEvaluatorTestCase(tc, session)
+    }
 
     /** @see [AstEvaluatorTestAdapter.runEvaluatorErrorTestCase]. */
+    @OptIn(ExperimentalCoroutinesApi::class)
     protected fun runEvaluatorErrorTestCase(
         query: String,
         expectedErrorCode: ErrorCode,
@@ -144,7 +150,7 @@ abstract class EvaluatorTestBase : TestBase() {
         implicitPermissiveModeTest: Boolean = true,
         target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
         session: EvaluationSession = EvaluationSession.standard()
-    ) {
+    ) = runTest {
         val tc = EvaluatorErrorTestCase(
             query = query,
             expectedErrorCode = expectedErrorCode,
@@ -162,8 +168,10 @@ abstract class EvaluatorTestBase : TestBase() {
     }
 
     /** @see [AstEvaluatorTestAdapter.runEvaluatorTestCase] */
-    fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession) =
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun runEvaluatorErrorTestCase(tc: EvaluatorErrorTestCase, session: EvaluationSession) = runTest {
         testHarness.runEvaluatorErrorTestCase(tc, session)
+    }
 
     /**
      * Uses the AST compiler to evaluate a PartiQL query using the AST evaluator.

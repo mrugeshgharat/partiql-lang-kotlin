@@ -1,5 +1,6 @@
 package org.partiql.lang.util.testdsl
 
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.CompilerPipeline
@@ -72,7 +73,7 @@ internal fun IonResultTestCase.runTestCase(
     db: MockDb,
     target: EvaluatorTestTarget,
     compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
-) {
+) = runTest {
     val adapter = PipelineEvaluatorTestAdapter(
         when (target) {
             EvaluatorTestTarget.COMPILER_PIPELINE -> CompilerPipelineFactory()
@@ -89,21 +90,21 @@ internal fun IonResultTestCase.runTestCase(
     }
 
     val tc = EvaluatorTestCase(
-        groupName = "${this.group}:${this.name}",
-        query = this.sqlUnderTest,
-        expectedResult = this.expectedLegacyModeIonResult,
-        expectedPermissiveModeResult = this.expectedPermissiveModeIonResult,
+        groupName = "${this@runTestCase.group}:${this@runTestCase.name}",
+        query = this@runTestCase.sqlUnderTest,
+        expectedResult = this@runTestCase.expectedLegacyModeIonResult,
+        expectedPermissiveModeResult = this@runTestCase.expectedPermissiveModeIonResult,
         expectedResultFormat = ExpectedResultFormat.ION,
         implicitPermissiveModeTest = false,
-        compileOptionsBuilderBlock = this.compileOptionsBuilderBlock,
+        compileOptionsBuilderBlock = this@runTestCase.compileOptionsBuilderBlock,
         compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
         extraResultAssertions = extraAssertions
     )
 
-    if (!this.expectFailure) {
+    if (!this@runTestCase.expectFailure) {
         adapter.runEvaluatorTestCase(tc, session)
     } else {
-        val message = "We expect test \"${this.name}\" to fail, but it did not. This check exists to ensure the " +
+        val message = "We expect test \"${this@runTestCase.name}\" to fail, but it did not. This check exists to ensure the " +
             "failing list is up to date."
 
         assertThrows<Throwable>(message) {

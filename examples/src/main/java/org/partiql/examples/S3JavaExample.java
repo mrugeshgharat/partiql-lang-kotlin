@@ -27,6 +27,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.examples.util.Example;
+import org.partiql.examples.util.JavaExample;
 import org.partiql.lang.CompilerPipeline;
 import org.partiql.lang.eval.Bindings;
 import org.partiql.lang.eval.EvaluationSession;
@@ -40,7 +41,7 @@ import java.io.PrintStream;
 /**
  * This example executes a PartiQL query against ION data stored as an object in S3.
  */
-public class S3JavaExample extends Example {
+public class S3JavaExample extends JavaExample {
 
     public S3JavaExample(@NotNull PrintStream out) {
         super(out);

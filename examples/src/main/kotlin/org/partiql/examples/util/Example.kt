@@ -5,7 +5,7 @@ import org.partiql.lang.util.ConfigurableExprValueFormatter
 import java.io.PrintStream
 
 abstract class Example(val out: PrintStream) {
-    abstract fun run()
+    abstract suspend fun run()
 
     private val formatter = ConfigurableExprValueFormatter.pretty
 

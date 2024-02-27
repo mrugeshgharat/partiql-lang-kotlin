@@ -14,11 +14,11 @@
 
 package org.partiql.examples
 
-import org.partiql.examples.util.Example
+import org.partiql.examples.util.JavaExample
 import java.io.PrintStream
 
-class EvaluationJavaExampleTest : BaseExampleTest() {
-    override fun example(out: PrintStream): Example = EvaluationJavaExample(out)
+class EvaluationJavaExampleTest : BaseJavaExampleTest() {
+    override fun example(out: PrintStream): JavaExample = EvaluationJavaExample(out)
 
     override val expected = """
         |PartiQL query:

@@ -91,7 +91,7 @@ class CalculateCrewMoonWeight : StoredProcedure {
 class CustomProceduresExample(out: PrintStream) : Example(out) {
     private val ion = IonSystemBuilder.standard().build()
 
-    override fun run() {
+    override suspend fun run() {
         /**
          * To make custom stored procedures available to the PartiQL query being executed, they must be passed to
          * [CompilerPipeline.Builder.addProcedure].

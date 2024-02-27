@@ -2,6 +2,7 @@ package org.partiql.examples;
 
 import org.jetbrains.annotations.NotNull;
 import org.partiql.examples.util.Example;
+import org.partiql.examples.util.JavaExample;
 import org.partiql.lang.CompilerPipeline;
 import org.partiql.lang.eval.BaseExprValue;
 import org.partiql.lang.eval.Bindings;
@@ -22,7 +23,7 @@ import java.util.stream.IntStream;
 /**
  * This example executes a PartiQL query against CSV-formatted data.
  */
-public class CSVJavaExample extends Example {
+public class CSVJavaExample extends JavaExample {
 
     public CSVJavaExample(@NotNull PrintStream out) {
         super(out);

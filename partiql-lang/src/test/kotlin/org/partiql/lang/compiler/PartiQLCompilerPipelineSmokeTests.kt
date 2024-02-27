@@ -1,6 +1,8 @@
 package org.partiql.lang.compiler
 
 import com.amazon.ionelement.api.ionInt
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -26,7 +28,7 @@ import org.partiql.lang.planner.createFakeGlobalsResolver
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 
-@OptIn(ExperimentalPartiQLCompilerPipeline::class)
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalPartiQLCompilerPipeline::class)
 class PartiQLCompilerPipelineSmokeTests {
 
     private fun createPlannerPipelineForTest(
@@ -45,7 +47,7 @@ class PartiQLCompilerPipelineSmokeTests {
     }
 
     @Test
-    fun `happy path`() {
+    fun `happy path`() = runTest {
         var pecCallbacks = 0
         val plannerEventCallback: PlannerEventCallback = { _ ->
             pecCallbacks++
@@ -55,7 +57,7 @@ class PartiQLCompilerPipelineSmokeTests {
 
         // the constructed ASTs are tested separately, here we check the compile function does not throw any exception.
         assertDoesNotThrow {
-            pipeline.compile("SELECT c.* FROM Customer AS c WHERE c.primaryKey = 42")
+            pipeline.compileAsync("SELECT c.* FROM Customer AS c WHERE c.primaryKey = 42")
         }
 
         // pec should be called once for each pass in the planner:
@@ -67,11 +69,11 @@ class PartiQLCompilerPipelineSmokeTests {
     }
 
     @Test
-    fun `undefined variable`() {
+    fun `undefined variable`() = runTest {
         val qp = createPlannerPipelineForTest(allowUndefinedVariables = false, plannerEventCallback = null)
 
         val error = assertThrows<PartiQLException> {
-            qp.compile("SELECT undefined.* FROM Customer AS c")
+            qp.compileAsync("SELECT undefined.* FROM Customer AS c")
         }
 
         // TODO: We use string comparison until we finalized the error reporting mechanism for PartiQLCompilerPipeline
@@ -82,7 +84,7 @@ class PartiQLCompilerPipelineSmokeTests {
     }
 
     @Test
-    fun `physical plan pass - happy path`() {
+    fun `physical plan pass - happy path`() = runTest {
         val qp = createPlannerPipelineForTest(allowUndefinedVariables = false, plannerEventCallback = null) {
             planner.physicalPlannerPasses(
                 listOf(
@@ -103,7 +105,7 @@ class PartiQLCompilerPipelineSmokeTests {
         }
 
         assertDoesNotThrow {
-            qp.compile("1")
+            qp.compileAsync("1")
         }
     }
 
@@ -116,7 +118,7 @@ class PartiQLCompilerPipelineSmokeTests {
         }
 
     @Test
-    fun `physical plan pass - first user pass sends semantic error`() {
+    fun `physical plan pass - first user pass sends semantic error`() = runTest {
         val qp = createPlannerPipelineForTest(allowUndefinedVariables = false, plannerEventCallback = null) {
             planner.physicalPlannerPasses(
                 listOf(
@@ -142,7 +144,7 @@ class PartiQLCompilerPipelineSmokeTests {
         val expectedError = createFakeErrorProblem(SourceLocationMeta(1, 1, 57))
 
         val error = assertThrows<PartiQLException> {
-            qp.compile(
+            qp.compileAsync(
                 // the actual expression doesn't matter as long as it doesn't have an error detected by a built-in pass
                 "'the meaning of life, the universe, and everything is 42'"
             )

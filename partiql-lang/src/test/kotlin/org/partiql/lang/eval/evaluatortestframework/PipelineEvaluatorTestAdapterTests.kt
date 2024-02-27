@@ -1,5 +1,7 @@
 package org.partiql.lang.eval.evaluatortestframework
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -11,7 +13,7 @@ import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.TIME_ANNOTATION
 import org.partiql.lang.util.propertyValueMapOf
 
-private fun assertTestFails(
+private suspend fun assertTestFails(
     testAdapter: PipelineEvaluatorTestAdapter,
     expectedReason: EvaluatorTestFailureReason,
     tc: EvaluatorTestCase
@@ -22,7 +24,7 @@ private fun assertTestFails(
     assertEquals(expectedReason, ex.reason)
 }
 
-private fun assertErrorTestFails(
+private suspend fun assertErrorTestFails(
     testAdapter: PipelineEvaluatorTestAdapter,
     expectedReason: EvaluatorTestFailureReason,
     tc: EvaluatorErrorTestCase
@@ -38,14 +40,15 @@ private fun assertErrorTestFails(
  * These are "smoke tests" to ensure that the essential parts of [PipelineEvaluatorTestAdapterTests] are
  * working correctly.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class PipelineEvaluatorTestAdapterTests {
     private val astPipelineTestAdapter = PipelineEvaluatorTestAdapter(CompilerPipelineFactory())
 
-    private fun assertTestFails(expectedReason: EvaluatorTestFailureReason, tc: EvaluatorTestCase) {
+    private suspend fun assertTestFails(expectedReason: EvaluatorTestFailureReason, tc: EvaluatorTestCase) {
         assertTestFails(astPipelineTestAdapter, expectedReason, tc)
     }
 
-    private fun assertErrorTestFails(expectedReason: EvaluatorTestFailureReason, tc: EvaluatorErrorTestCase) {
+    private suspend fun assertErrorTestFails(expectedReason: EvaluatorTestFailureReason, tc: EvaluatorErrorTestCase) {
         assertErrorTestFails(astPipelineTestAdapter, expectedReason, tc)
     }
 
@@ -56,7 +59,7 @@ class PipelineEvaluatorTestAdapterTests {
     //
 
     @Test
-    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION`() {
+    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION`() = runTest {
         assertDoesNotThrow("happy path - should not throw") {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
@@ -70,7 +73,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - different permissive mode result - ExpectedResultFormat-ION`() {
+    fun `runEvaluatorTestCase - different permissive mode result - ExpectedResultFormat-ION`() = runTest {
         assertDoesNotThrow("happy path - should not throw") {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
@@ -85,7 +88,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION (missing)`() {
+    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION (missing)`() = runTest {
         assertDoesNotThrow("happy path - should not throw") {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
@@ -99,7 +102,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION (date)`() {
+    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION (date)`() = runTest {
         assertDoesNotThrow("happy path - should not throw") {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
@@ -113,7 +116,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION (time)`() {
+    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION (time)`() = runTest {
         assertDoesNotThrow("happy path - should not throw") {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
@@ -127,7 +130,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-STRING mode`() {
+    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-STRING mode`() = runTest {
         assertDoesNotThrow("happy path - should not throw") {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
@@ -141,7 +144,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - expected result does not match - ExpectedResultFormat-ION mode`() {
+    fun `runEvaluatorTestCase - expected result does not match - ExpectedResultFormat-ION mode`() = runTest {
         assertTestFails(
             EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
             EvaluatorTestCase(
@@ -153,7 +156,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - expected result does not match - ExpectedResultFormat-PARTIQL mode`() {
+    fun `runEvaluatorTestCase - expected result does not match - ExpectedResultFormat-PARTIQL mode`() = runTest {
         assertTestFails(
             EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
             EvaluatorTestCase(
@@ -165,7 +168,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - expected result does not match - ExpectedResultFormat-STRING mode`() {
+    fun `runEvaluatorTestCase - expected result does not match - ExpectedResultFormat-STRING mode`() = runTest {
         assertTestFails(
             EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
             EvaluatorTestCase(
@@ -177,7 +180,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - syntax error in expected result - ExpectedResultFormat-PARTIQL mode`() {
+    fun `runEvaluatorTestCase - syntax error in expected result - ExpectedResultFormat-PARTIQL mode`() = runTest {
         assertTestFails(
             EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
             EvaluatorTestCase(
@@ -189,7 +192,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - syntax error in expected result - ExpectedResultFormat-ION`() {
+    fun `runEvaluatorTestCase - syntax error in expected result - ExpectedResultFormat-ION`() = runTest {
         assertTestFails(
             EvaluatorTestFailureReason.FAILED_TO_PARSE_ION_EXPECTED_RESULT,
             EvaluatorTestCase(
@@ -201,7 +204,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - syntax error in query`() {
+    fun `runEvaluatorTestCase - syntax error in query`() = runTest {
         assertTestFails(
             EvaluatorTestFailureReason.FAILED_TO_EVALUATE_QUERY,
             EvaluatorTestCase(
@@ -212,7 +215,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - extraResultAssertions`() {
+    fun `runEvaluatorTestCase - extraResultAssertions`() = runTest {
         assertThrows<FooException>("extraResultAssertions should throw") {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
@@ -229,7 +232,7 @@ class PipelineEvaluatorTestAdapterTests {
     //
 
     @Test
-    fun `runEvaluatorErrorTestCase - EXPECTED_SQL_EXCEPTION_BUT_THERE_WAS_NONE`() {
+    fun `runEvaluatorErrorTestCase - EXPECTED_SQL_EXCEPTION_BUT_THERE_WAS_NONE`() = runTest {
         assertErrorTestFails(
             EvaluatorTestFailureReason.EXPECTED_SQL_EXCEPTION_BUT_THERE_WAS_NONE,
             EvaluatorErrorTestCase(
@@ -241,7 +244,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorErrorTestCase - UNEXPECTED_ERROR_CODE`() {
+    fun `runEvaluatorErrorTestCase - UNEXPECTED_ERROR_CODE`() = runTest {
         assertErrorTestFails(
             EvaluatorTestFailureReason.UNEXPECTED_ERROR_CODE,
             EvaluatorErrorTestCase(
@@ -254,7 +257,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorErrorTestCase - UNEXPECTED_ERROR_CONTEXT`() {
+    fun `runEvaluatorErrorTestCase - UNEXPECTED_ERROR_CONTEXT`() = runTest {
         assertErrorTestFails(
             EvaluatorTestFailureReason.UNEXPECTED_ERROR_CONTEXT,
             EvaluatorErrorTestCase(
@@ -266,7 +269,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorErrorTestCase - UNEXPECTED_INTERNAL_FLAG`() {
+    fun `runEvaluatorErrorTestCase - UNEXPECTED_INTERNAL_FLAG`() = runTest {
         assertErrorTestFails(
             EvaluatorTestFailureReason.UNEXPECTED_INTERNAL_FLAG,
             EvaluatorErrorTestCase(
@@ -278,7 +281,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorErrorTestCase - FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT`() {
+    fun `runEvaluatorErrorTestCase - FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT`() = runTest {
         assertErrorTestFails(
             EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
             EvaluatorErrorTestCase(
@@ -290,7 +293,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorErrorTestCase - UNEXPECTED_PERMISSIVE_MODE_RESULT`() {
+    fun `runEvaluatorErrorTestCase - UNEXPECTED_PERMISSIVE_MODE_RESULT`() = runTest {
         assertErrorTestFails(
             EvaluatorTestFailureReason.UNEXPECTED_PERMISSIVE_MODE_RESULT,
             EvaluatorErrorTestCase(
@@ -302,7 +305,7 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorErrorTestCase - additionalExceptionAssertBlock`() {
+    fun `runEvaluatorErrorTestCase - additionalExceptionAssertBlock`() = runTest {
         // No need to test both test adapters here since additionalExceptionAssertBlock is invoked by
         // PipelineEvaluatorTestAdapter.
         assertThrows<FooException>("additionalExceptionAssertBlock should throw") {

@@ -2,6 +2,7 @@ package org.partiql.cli
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.cli.pipeline.AbstractPipeline
@@ -37,7 +38,7 @@ internal fun makeCliAndGetResult(
         query,
         wrapIon
     )
-    cli.run()
+    runBlocking { cli.run() }
     return output.toString()
 }
 

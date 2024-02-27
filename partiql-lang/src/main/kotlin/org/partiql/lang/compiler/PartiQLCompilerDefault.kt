@@ -65,11 +65,11 @@ internal class PartiQLCompilerDefault(
 
     override fun compile(statement: PartiqlPhysical.Plan): PartiQLStatement {
         return when (val stmt = statement.stmt) {
-            is PartiqlPhysical.Statement.Dml -> compileDml(stmt, statement.locals.size)
+            is PartiqlPhysical.Statement.Dml -> runBlocking { compileDml(stmt, statement.locals.size) }
             is PartiqlPhysical.Statement.Exec,
             is PartiqlPhysical.Statement.Query -> {
                 val expression = runBlocking { exprConverter.compile(statement) }
-                PartiQLStatement { expression.eval(it).toValue() }
+                PartiQLStatement { expression.evalAsync(it) }
             }
             is PartiqlPhysical.Statement.Explain -> throw PartiQLException("Unable to compile EXPLAIN without details.")
         }
@@ -77,14 +77,14 @@ internal class PartiQLCompilerDefault(
 
     override fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails): PartiQLStatement {
         return when (val stmt = statement.stmt) {
-            is PartiqlPhysical.Statement.Dml -> compileDml(stmt, statement.locals.size)
+            is PartiqlPhysical.Statement.Dml -> runBlocking { compileDml(stmt, statement.locals.size) }
             is PartiqlPhysical.Statement.Exec,
-            is PartiqlPhysical.Statement.Query -> compile(statement)
+            is PartiqlPhysical.Statement.Query -> runBlocking { compileAsync(statement, details) }
             is PartiqlPhysical.Statement.Explain -> PartiQLStatement { compileExplain(stmt, details) }
         }
     }
 
-    override suspend fun compileAsync(statement: PartiqlPhysical.Plan): PartiQLStatement {
+    override suspend fun compileAsync(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails): PartiQLStatement {
         return when (val stmt = statement.stmt) {
             is PartiqlPhysical.Statement.Dml -> compileDml(stmt, statement.locals.size)
             is PartiqlPhysical.Statement.Exec,
@@ -92,7 +92,7 @@ internal class PartiQLCompilerDefault(
                 val expression = exprConverter.compile(statement)
                 PartiQLStatement { expression.evalAsync(it) }
             }
-            is PartiqlPhysical.Statement.Explain -> throw PartiQLException("Unable to compile EXPLAIN without details.")
+            is PartiqlPhysical.Statement.Explain -> PartiQLStatement { compileExplain(stmt, details) }
         }
     }
 
@@ -107,13 +107,13 @@ internal class PartiQLCompilerDefault(
         PHYSICAL_TRANSFORMED
     }
 
-    private fun compileDml(dml: PartiqlPhysical.Statement.Dml, localsSize: Int): PartiQLStatement {
+    private suspend fun compileDml(dml: PartiqlPhysical.Statement.Dml, localsSize: Int): PartiQLStatement {
         val rows = exprConverter.compile(dml.rows, localsSize)
         return PartiQLStatement { session ->
             when (dml.operation) {
-                is PartiqlPhysical.DmlOperation.DmlReplace -> PartiQLResult.Replace(dml.uniqueId.text, rows.eval(session))
-                is PartiqlPhysical.DmlOperation.DmlInsert -> PartiQLResult.Insert(dml.uniqueId.text, rows.eval(session))
-                is PartiqlPhysical.DmlOperation.DmlDelete -> PartiQLResult.Delete(dml.uniqueId.text, rows.eval(session))
+                is PartiqlPhysical.DmlOperation.DmlReplace -> PartiQLResult.Replace(dml.uniqueId.text, (rows.evalAsync(session) as PartiQLResult.Value).value)
+                is PartiqlPhysical.DmlOperation.DmlInsert -> PartiQLResult.Insert(dml.uniqueId.text, (rows.evalAsync(session) as PartiQLResult.Value).value)
+                is PartiqlPhysical.DmlOperation.DmlDelete -> PartiQLResult.Delete(dml.uniqueId.text, (rows.evalAsync(session) as PartiQLResult.Value).value)
                 is PartiqlPhysical.DmlOperation.DmlUpdate -> TODO("DML Update compilation not supported yet.")
             }
         }

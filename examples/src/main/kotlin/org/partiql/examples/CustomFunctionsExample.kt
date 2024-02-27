@@ -115,7 +115,7 @@ class CustomFunctionsExample(out: PrintStream) : Example(out) {
         return e.eval(EvaluationSession.standard())
     }
 
-    override fun run() {
+    override suspend fun run() {
         listOf(
             "fib_scalar(NULL)",
             "fib_scalar(MISSING)",

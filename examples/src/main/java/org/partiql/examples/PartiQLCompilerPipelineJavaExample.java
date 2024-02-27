@@ -2,10 +2,18 @@ package org.partiql.examples;
 
 import com.amazon.ion.IonSystem;
 import com.amazon.ion.system.IonSystemBuilder;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import kotlin.OptIn;
+import kotlin.coroutines.EmptyCoroutineContext;
+import kotlinx.coroutines.CoroutineScopeKt;
+import kotlinx.coroutines.CoroutineStart;
+import kotlinx.coroutines.future.FutureKt;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline;
 import org.partiql.examples.util.Example;
+import org.partiql.examples.util.JavaExample;
 import org.partiql.lang.compiler.PartiQLCompiler;
 import org.partiql.lang.compiler.PartiQLCompilerBuilder;
 import org.partiql.lang.compiler.PartiQLCompilerPipeline;
@@ -13,6 +21,7 @@ import org.partiql.lang.eval.Bindings;
 import org.partiql.lang.eval.EvaluationSession;
 import org.partiql.lang.eval.ExprValue;
 import org.partiql.lang.eval.PartiQLResult;
+import org.partiql.lang.eval.PartiQLStatement;
 import org.partiql.lang.eval.ProjectionIterationBehavior;
 import org.partiql.lang.planner.EvaluatorOptions;
 import org.partiql.lang.planner.GlobalResolutionResult;
@@ -23,6 +32,7 @@ import org.partiql.lang.syntax.Parser;
 import org.partiql.lang.syntax.PartiQLParserBuilder;
 
 import java.io.PrintStream;
+import static org.partiql.lang.eval.PartiQLStatementKt.evalToFuture;
 
 /**
  * This is an example of using PartiQLCompilerPipeline in Java.
@@ -30,7 +40,7 @@ import java.io.PrintStream;
  * Unfortunately, it seems like the Java does not recognize the Optin annotation specified in Kotlin.
  * Java users will be able to access the experimental APIs freely, and not be warned at all.
  */
-public class PartiQLCompilerPipelineJavaExample extends Example {
+public class PartiQLCompilerPipelineJavaExample extends JavaExample {
 
     public PartiQLCompilerPipelineJavaExample(@NotNull PrintStream out) {
         super(out);
@@ -89,7 +99,27 @@ public class PartiQLCompilerPipelineJavaExample extends Example {
         String query = "SELECT t.name FROM myTable AS t WHERE t.age > 20";
 
         print("PartiQL query:", query);
-        PartiQLResult result = pipeline.compile(query).eval(session);
+
+        CompletableFuture<PartiQLStatement> statementFuture = FutureKt.future(
+                CoroutineScopeKt.CoroutineScope(EmptyCoroutineContext.INSTANCE),
+                EmptyCoroutineContext.INSTANCE,
+                CoroutineStart.DEFAULT,
+                (scope, continuation) -> pipeline.compileAsync(query, continuation)
+        );
+
+        PartiQLResult result;
+        try {
+            PartiQLStatement statement = statementFuture.get();
+            CompletableFuture<PartiQLResult> resultFuture = FutureKt.future(
+                    CoroutineScopeKt.CoroutineScope(EmptyCoroutineContext.INSTANCE),
+                    EmptyCoroutineContext.INSTANCE,
+                    CoroutineStart.DEFAULT,
+                    (scope, continuation) -> statement.eval(session, continuation)
+            );
+            result = resultFuture.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
         ExprValue exprValue = null;
         if (result instanceof PartiQLResult.Value) {
             exprValue = ((PartiQLResult.Value) result).getValue();

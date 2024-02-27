@@ -1,7 +1,6 @@
 package org.partiql.examples
 
 import com.amazon.ion.system.IonSystemBuilder
-import kotlinx.coroutines.runBlocking
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.examples.util.Example
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
@@ -67,21 +66,19 @@ class PartiQLCompilerPipelineExample(out: PrintStream) : Example(out) {
             .options(evaluatorOptions)
     }
 
-    override fun run() {
+    override suspend fun run() {
         val query = "SELECT t.name FROM myTable AS t WHERE t.age > 20"
 
         print("PartiQL query:", query)
         @OptIn(ExperimentalPartiQLCompilerPipeline::class)
-        val statement = partiQLCompilerPipeline.compile(query)
-        runBlocking {
-            val exprValue = when (val result = statement.eval(session)) {
-                is PartiQLResult.Value -> result.value
-                is PartiQLResult.Delete,
-                is PartiQLResult.Explain.Domain,
-                is PartiQLResult.Insert,
-                is PartiQLResult.Replace -> TODO("DML and Explain not covered in this example")
-            }
-            print("result", exprValue)
+        val statement = partiQLCompilerPipeline.compileAsync(query)
+        val exprValue = when (val result = statement.eval(session)) {
+            is PartiQLResult.Value -> result.value
+            is PartiQLResult.Delete,
+            is PartiQLResult.Explain.Domain,
+            is PartiQLResult.Insert,
+            is PartiQLResult.Replace -> TODO("DML and Explain not covered in this example")
         }
+        print("result", exprValue)
     }
 }

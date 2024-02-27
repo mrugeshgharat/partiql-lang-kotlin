@@ -59,7 +59,7 @@ class CsvExprValueExample(out: PrintStream) : Example(out) {
         return e.eval(session)
     }
 
-    override fun run() {
+    override suspend fun run() {
         print("CSV file:", EXAMPLE_CSV_FILE_CONTENTS)
 
         val globals = Bindings.buildLazyBindings<ExprValue> {

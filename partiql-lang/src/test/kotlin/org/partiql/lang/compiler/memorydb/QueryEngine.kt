@@ -170,7 +170,7 @@ class QueryEngine(val db: MemoryDatabase) {
             )
     }
 
-    fun executeQuery(sql: String): ExprValue {
+    suspend fun executeQuery(sql: String): ExprValue {
 
         // session data
         val session = EvaluationSession.build {
@@ -181,7 +181,7 @@ class QueryEngine(val db: MemoryDatabase) {
         }
 
         // compile query to statement
-        val statement = compilerPipeline.compile(sql)
+        val statement = compilerPipeline.compileAsync(sql)
 
         // First step is to plan the query.
         // This parses the query and runs it through all the planner passes:

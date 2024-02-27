@@ -9,7 +9,7 @@ import java.io.PrintStream
 class SimpleExpressionEvaluation(out: PrintStream) : Example(out) {
     val pipeline = CompilerPipeline.standard()
 
-    override fun run() {
+    override suspend fun run() {
         // An EvaluationSession holds context needed for evaluation of the compiled query.
         val session = EvaluationSession.standard()
 

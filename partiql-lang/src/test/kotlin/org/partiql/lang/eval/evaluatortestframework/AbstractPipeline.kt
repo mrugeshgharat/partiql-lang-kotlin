@@ -11,5 +11,5 @@ import org.partiql.lang.eval.TypingMode
  */
 interface AbstractPipeline {
     val typingMode: TypingMode
-    fun evaluate(query: String): ExprValue
+    suspend fun evaluate(query: String): ExprValue
 }

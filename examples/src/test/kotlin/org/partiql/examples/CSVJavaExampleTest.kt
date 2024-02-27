@@ -1,10 +1,10 @@
 package org.partiql.examples
 
-import org.partiql.examples.util.Example
+import org.partiql.examples.util.JavaExample
 import java.io.PrintStream
 
-class CSVJavaExampleTest : BaseExampleTest() {
-    override fun example(out: PrintStream): Example = CSVJavaExample(out)
+class CSVJavaExampleTest : BaseJavaExampleTest() {
+    override fun example(out: PrintStream): JavaExample = CSVJavaExample(out)
 
     override val expected = """
             |CSV Data:

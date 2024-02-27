@@ -16,7 +16,7 @@ class ParserErrorExample(out: PrintStream) : Example(out) {
     private var parser: Parser = PartiQLParserBuilder().build()
 
     /** Demonstrates handling of syntax errors.  */
-    override fun run() = try {
+    override suspend fun run() = try {
         // Attempt to parse a query with invalid syntax.
         val invalidQuery = "SELECT 1 + "
         print("Invalid PartiQL query:", invalidQuery)

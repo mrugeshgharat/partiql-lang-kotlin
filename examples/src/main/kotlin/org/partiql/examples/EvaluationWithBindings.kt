@@ -11,7 +11,7 @@ import java.io.PrintStream
 class EvaluationWithBindings(out: PrintStream) : Example(out) {
     val pipeline = CompilerPipeline.standard()
 
-    override fun run() {
+    override suspend fun run() {
         // Compiles a simple expression containing a reference to a global variable.
         val query = "'Hello, ' || user_name"
         print("PartiQL query:", query)
