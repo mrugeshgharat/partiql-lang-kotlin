@@ -32,7 +32,6 @@ import org.partiql.lang.syntax.Parser;
 import org.partiql.lang.syntax.PartiQLParserBuilder;
 
 import java.io.PrintStream;
-import static org.partiql.lang.eval.PartiQLStatementKt.evalToFuture;
 
 /**
  * This is an example of using PartiQLCompilerPipeline in Java.

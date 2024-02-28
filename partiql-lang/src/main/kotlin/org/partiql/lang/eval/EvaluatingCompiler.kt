@@ -401,10 +401,6 @@ internal open class EvaluatingCompiler(
                 val value = thunk(env)
                 return PartiQLResult.Value(value = value)
             }
-
-            override suspend fun evalAsync(session: EvaluationSession): PartiQLResult {
-                TODO("Not yet implemented")
-            }
         }
     }
 

@@ -17,21 +17,9 @@ package org.partiql.lang.eval
 /**
  * An expression that can be evaluated to [ExprValue].
  */
-interface Expression {
-
+internal interface ExpressionAsync {
     /**
-     * Pre-Execution Coverage Statistics
+     *
      */
-    val coverageStructure: CoverageStructure?
-
-    /**
-     * Evaluates the expression with the given Session
-     */
-    @Deprecated("To be removed in the next release.", replaceWith = ReplaceWith("evaluate"))
-    fun eval(session: EvaluationSession): ExprValue
-
-    /**
-     * Evaluates the expression with the given Session
-     */
-    fun evaluate(session: EvaluationSession): PartiQLResult
+    suspend fun evalAsync(session: EvaluationSession): PartiQLResult
 }

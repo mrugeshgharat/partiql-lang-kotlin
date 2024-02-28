@@ -29,7 +29,7 @@ fun interface PartiQLStatement {
 
 /**
  * Java does not support Kotlin co-routines. This function is meant to call [PartiQLStatement.eval] and return back
- * a [CompletableFuture] for Java interoperability.
+ * a [CompletableFuture] for Java interoperability. TODO ALAN determine if we want to include at this time.
  */
 @OptIn(DelicateCoroutinesApi::class)
 fun evalToFuture(statement: PartiQLStatement, session: EvaluationSession): CompletableFuture<PartiQLResult> {

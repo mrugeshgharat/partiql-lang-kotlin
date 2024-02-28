@@ -2,9 +2,10 @@ package org.partiql.lang.compiler.async
 
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
-import kotlinx.coroutines.async
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
@@ -34,12 +35,11 @@ class AsyncOperatorTests {
                 predicate: ValueExpression,
                 sourceBexpr: RelationExpression
             ): RelationExpression = RelationExpression { state ->
-                // `runBlocking` required since need some coroutine scope to run async fun
-                // goal is to make this call not `runBlocking`
-                runBlocking {
-                    println("Calling")
-                    someAsyncOp()
-                }
+                // If `RelationExpression`'s `evaluate` was NOT a `suspend fun`, then `runBlocking` would be required
+//                runBlocking {
+                println("Calling")
+                someAsyncOp()
+//                }
                 val input = sourceBexpr.evaluate(state)
 
                 relation(RelationType.BAG) {
@@ -64,8 +64,9 @@ class AsyncOperatorTests {
         println("done sleeping")
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun compilePlan() {
+    fun compilePlan() = runTest {
         val pipeline = PartiQLCompilerPipeline.build {
             compiler
                 .customOperatorFactories(
@@ -92,15 +93,13 @@ class AsyncOperatorTests {
                 locals = listOf(localVariable("_1", 0))
             )
         }
-        runBlocking {
-            val statement = pipeline.compileAsync(plan)
-            repeat(10) { index ->
-                async {
-                    print("Compiling $index. ")
-                    val result = statement.eval(EvaluationSession.standard()) as PartiQLResult.Value
-                    println("About to print value; $index")
-                    println(result.value)
-                }
+        val statement = pipeline.compileAsync(plan)
+        repeat(10) { index ->
+            launch {
+                print("\nCompiling $index. ")
+                val result = statement.eval(EvaluationSession.standard()) as PartiQLResult.Value
+                println("About to print value; $index")
+                println(result.value)
             }
         }
     }

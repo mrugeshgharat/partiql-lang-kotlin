@@ -105,10 +105,6 @@ internal class CoverageCompiler(
                     coverageStructure = { coverageStructure }
                 )
             }
-
-            override suspend fun evalAsync(session: EvaluationSession): PartiQLResult {
-                TODO("Not yet implemented")
-            }
         }
     }
 

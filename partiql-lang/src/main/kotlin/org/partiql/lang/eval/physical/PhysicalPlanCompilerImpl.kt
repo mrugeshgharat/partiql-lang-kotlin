@@ -44,7 +44,6 @@ import org.partiql.lang.eval.BaseExprValue
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.CastFunc
-import org.partiql.lang.eval.CoverageStructure
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
 import org.partiql.lang.eval.ErrorDetails
 import org.partiql.lang.eval.EvaluationException
@@ -54,6 +53,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueBagOp
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.Expression
+import org.partiql.lang.eval.ExpressionAsync
 import org.partiql.lang.eval.FunctionNotFoundException
 import org.partiql.lang.eval.Named
 import org.partiql.lang.eval.PartiQLResult
@@ -180,21 +180,10 @@ internal class PhysicalPlanCompilerImpl(
      * and throws [InterruptedException] if [Thread.interrupted] it has been set in the
      * hope that long-running compilations may be aborted by the caller.
      */
-    suspend fun compile(plan: PartiqlPhysical.Plan): Expression {
+    suspend fun compile(plan: PartiqlPhysical.Plan): ExpressionAsync {
         val thunk = compileAstStatement(plan.stmt)
 
-        return object : Expression {
-            override val coverageStructure: CoverageStructure? = null
-
-            override fun eval(session: EvaluationSession): ExprValue {
-                val evalAsyncResult = runBlocking { evalAsync(session) }
-                return (evalAsyncResult as PartiQLResult.Value).value
-            }
-
-            override fun evaluate(session: EvaluationSession): PartiQLResult {
-                return runBlocking { evalAsync(session) }
-            }
-
+        return object : ExpressionAsync {
             override suspend fun evalAsync(session: EvaluationSession): PartiQLResult {
                 val env = EvaluatorState(
                     session = session,
@@ -213,29 +202,10 @@ internal class PhysicalPlanCompilerImpl(
      * and throws [InterruptedException] if [Thread.interrupted] it has been set in the
      * hope that long-running compilations may be aborted by the caller.
      */
-    internal suspend fun compile(expr: PartiqlPhysical.Expr, localsSize: Int): Expression {
+    internal suspend fun compile(expr: PartiqlPhysical.Expr, localsSize: Int): ExpressionAsync {
         val thunk = compileAstExpr(expr)
 
-        return object : Expression {
-            override val coverageStructure: CoverageStructure? = null
-
-            override fun eval(session: EvaluationSession): ExprValue {
-                val env = EvaluatorState(
-                    session = session,
-                    registers = Array(localsSize) { ExprValue.missingValue }
-                )
-                return runBlocking { thunk(env) }
-            }
-
-            override fun evaluate(session: EvaluationSession): PartiQLResult {
-                val env = EvaluatorState(
-                    session = session,
-                    registers = Array(localsSize) { ExprValue.missingValue }
-                )
-                val value = runBlocking { thunk(env) }
-                return PartiQLResult.Value(value = value)
-            }
-
+        return object : ExpressionAsync {
             override suspend fun evalAsync(session: EvaluationSession): PartiQLResult {
                 val env = EvaluatorState(
                     session = session,
