@@ -920,7 +920,7 @@ internal class PhysicalPlanCompilerImpl(
         }
     }
 
-    private suspend fun compileParameter(expr: PartiqlPhysical.Expr.Parameter, metas: MetaContainer): PhysicalPlanThunk {
+    private fun compileParameter(expr: PartiqlPhysical.Expr.Parameter, metas: MetaContainer): PhysicalPlanThunk {
         val ordinal = expr.index.value.toInt()
         val index = ordinal - 1
 
@@ -945,7 +945,7 @@ internal class PhysicalPlanCompilerImpl(
      * Returns a lambda that implements the `IS` operator type check according to the current
      * [TypedOpBehavior].
      */
-    private suspend fun makeIsCheck(
+    private fun makeIsCheck(
         staticType: SingleType,
         typedOpParameter: TypedOpParameter,
         metas: MetaContainer
