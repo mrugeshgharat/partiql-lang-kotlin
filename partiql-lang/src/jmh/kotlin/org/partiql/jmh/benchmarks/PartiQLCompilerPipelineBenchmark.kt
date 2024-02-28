@@ -76,9 +76,9 @@ open class PartiQLCompilerPipelineBenchmark {
 
         val parameters = listOf(
             ExprValue.newInt(5),    // WHERE `id` > 5
+            ExprValue.newInt(1000000),  // LIMIT 1000000
             ExprValue.newInt(3),    // OFFSET 3 * 2
             ExprValue.newInt(2),    // ------------^
-            ExprValue.newInt(1),    // LIMIT 1
         )
         val session = EvaluationSession.build {
             globals(bindings)
@@ -113,16 +113,15 @@ open class PartiQLCompilerPipelineBenchmark {
             SELECT *
             FROM t100000
             WHERE t100000.someTimestamp < UTCNOW()
-            ORDER BY t100000.id DESC
+            LIMIT ${Int.MAX_VALUE}
             """.trimIndent()
         )
         val query4 = parser.parseAstStatement(
             """
             SELECT *
             FROM t100000
-            WHERE t100000.someTimestamp < UTCNOW() AND t100000.id > ?
-            LIMIT ?
-            OFFSET ? * ?
+            WHERE t100000.someTimestamp < UTCNOW()
+            ORDER BY t100000.id DESC
             """.trimIndent()
         )
         val query5 = parser.parseAstStatement(
@@ -130,12 +129,21 @@ open class PartiQLCompilerPipelineBenchmark {
             SELECT *
             FROM t100000
             WHERE t100000.someTimestamp < UTCNOW() AND t100000.id > ?
-            ORDER BY t100000.id DESC
             LIMIT ?
             OFFSET ? * ?
             """.trimIndent()
         )
         val query6 = parser.parseAstStatement(
+            """
+            SELECT *
+            FROM t100000
+            WHERE t100000.someTimestamp < UTCNOW() AND t100000.id > ?
+            ORDER BY t100000.id DESC
+            LIMIT ?
+            OFFSET ? * ?
+            """.trimIndent()
+        )
+        val query7 = parser.parseAstStatement(
             """
             SELECT *
             FROM t10000
@@ -145,7 +153,7 @@ open class PartiQLCompilerPipelineBenchmark {
             OFFSET ? * ?
             """.trimIndent()
         )
-        val query7 = parser.parseAstStatement(
+        val query8 = parser.parseAstStatement(
             """
             SELECT *
             FROM t1000
@@ -155,7 +163,7 @@ open class PartiQLCompilerPipelineBenchmark {
             OFFSET ? * ?
             """.trimIndent()
         )
-        val query8 = parser.parseAstStatement(
+        val query9 = parser.parseAstStatement(
             """
             SELECT *
             FROM t100
@@ -165,7 +173,7 @@ open class PartiQLCompilerPipelineBenchmark {
             OFFSET ? * ?
             """.trimIndent()
         )
-        val query9 = parser.parseAstStatement(
+        val query10 = parser.parseAstStatement(
             """
             SELECT *
             FROM t10
@@ -175,7 +183,7 @@ open class PartiQLCompilerPipelineBenchmark {
             OFFSET ? * ?
             """.trimIndent()
         )
-        val query10 = parser.parseAstStatement(
+        val query11 = parser.parseAstStatement(
             """
             SELECT *
             FROM t1
@@ -196,6 +204,7 @@ open class PartiQLCompilerPipelineBenchmark {
         val statement8 = runBlocking { pipeline.compileAsync(query8) }
         val statement9 = runBlocking { pipeline.compileAsync(query9) }
         val statement10 = runBlocking { pipeline.compileAsync(query10) }
+        val statement11 = runBlocking { pipeline.compileAsync(query11) }
     }
 
     @OptIn(ExperimentalPartiQLCompilerPipeline::class)
@@ -353,6 +362,17 @@ open class PartiQLCompilerPipelineBenchmark {
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     fun testEvalQuery10(state: MyState, blackhole: Blackhole) = runBlocking {
         val result = state.statement10.eval(state.session)
+        val exprValue = (result as PartiQLResult.Value).value
+        blackhole.consume(exprValue)
+        blackhole.consume(exprValue.iterator().forEach { })
+    }
+
+    @Benchmark
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
+    fun testEvalQuery11(state: MyState, blackhole: Blackhole) = runBlocking {
+        val result = state.statement11.eval(state.session)
         val exprValue = (result as PartiQLResult.Value).value
         blackhole.consume(exprValue)
         blackhole.consume(exprValue.iterator().forEach { })
