@@ -27,6 +27,177 @@ import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.syntax.PartiQLParserBuilder
 
+@OptIn(ExperimentalPartiQLCompilerPipeline::class)
+fun main() {
+    val parser = PartiQLParserBuilder.standard().build()
+    val myIonSystem = IonSystemBuilder.standard().build()
+
+    fun tableWithRows(numRows: Int): ExprValue {
+        val allRows = (1..numRows).joinToString { index ->
+            """
+                {
+                    "id": $index,
+                    "someString": "some string foo $index",
+                    "someDecimal": $index.00,
+                    "someBlob": {{ dHdvIHBhZGRpbmcgY2hhcmFjdGVycw== }},
+                    "someTimestamp": 2007-02-23T12:14:15.${index}Z
+                }
+            """.trimIndent()
+        }
+        val data = "[ $allRows ]"
+        return ExprValue.of(
+            myIonSystem.singleValue(data)
+        )
+    }
+
+    val bindings = Bindings.ofMap(
+        mapOf(
+//            "t1" to tableWithRows(1),
+//            "t10" to tableWithRows(10),
+//            "t100" to tableWithRows(100),
+//            "t1000" to tableWithRows(1000),
+//            "t10000" to tableWithRows(10000),
+            "t100000" to tableWithRows(100000),
+        )
+    )
+
+    val parameters = listOf(
+        ExprValue.newInt(5),    // WHERE `id` > 5
+        ExprValue.newInt(1000000),  // LIMIT 1000000
+        ExprValue.newInt(3),    // OFFSET 3 * 2
+        ExprValue.newInt(2),    // ------------^
+    )
+    val session = EvaluationSession.build {
+        globals(bindings)
+        parameters(parameters)
+    }
+
+    val pipeline = PartiQLCompilerPipeline.build {
+        planner.globalVariableResolver {
+            val value = session.globals[it]
+            if (value != null) {
+                GlobalResolutionResult.GlobalVariable(it.name)
+            } else {
+                GlobalResolutionResult.Undefined
+            }
+        }
+    }
+
+//    val query1 = parser.parseAstStatement(
+//        """
+//        SELECT * FROM t100000
+//        """.trimIndent()
+//    )
+//    val query2 = parser.parseAstStatement(
+//        """
+//        SELECT *
+//        FROM t100000
+//        WHERE t100000.someTimestamp < UTCNOW()
+//        """.trimIndent()
+//    )
+    val query3 = parser.parseAstStatement(
+        """
+        SELECT *
+        FROM t100000
+        WHERE t100000.someTimestamp < UTCNOW()
+        LIMIT ${Int.MAX_VALUE}
+        """.trimIndent()
+    )
+//    val query4 = parser.parseAstStatement(
+//        """
+//        SELECT *
+//        FROM t100000
+//        WHERE t100000.someTimestamp < UTCNOW()
+//        ORDER BY t100000.id DESC
+//        """.trimIndent()
+//    )
+//    val query5 = parser.parseAstStatement(
+//        """
+//        SELECT *
+//        FROM t100000
+//        WHERE t100000.someTimestamp < UTCNOW() AND t100000.id > ?
+//        LIMIT ?
+//        OFFSET ? * ?
+//        """.trimIndent()
+//    )
+//    val query6 = parser.parseAstStatement(
+//        """
+//        SELECT *
+//        FROM t100000
+//        WHERE t100000.someTimestamp < UTCNOW() AND t100000.id > ?
+//        ORDER BY t100000.id DESC
+//        LIMIT ?
+//        OFFSET ? * ?
+//        """.trimIndent()
+//    )
+//    val query7 = parser.parseAstStatement(
+//        """
+//        SELECT *
+//        FROM t10000
+//        WHERE t10000.someTimestamp < UTCNOW() AND t10000.id > ?
+//        ORDER BY t10000.id DESC
+//        LIMIT ?
+//        OFFSET ? * ?
+//        """.trimIndent()
+//    )
+//    val query8 = parser.parseAstStatement(
+//        """
+//        SELECT *
+//        FROM t1000
+//        WHERE t1000.someTimestamp < UTCNOW() AND t1000.id > ?
+//        ORDER BY t1000.id DESC
+//        LIMIT ?
+//        OFFSET ? * ?
+//        """.trimIndent()
+//    )
+//    val query9 = parser.parseAstStatement(
+//        """
+//        SELECT *
+//        FROM t100
+//        WHERE t100.someTimestamp < UTCNOW() AND t100.id > ?
+//        ORDER BY t100.id DESC
+//        LIMIT ?
+//        OFFSET ? * ?
+//        """.trimIndent()
+//    )
+//    val query10 = parser.parseAstStatement(
+//        """
+//        SELECT *
+//        FROM t10
+//        WHERE t10.someTimestamp < UTCNOW() AND t10.id > ?
+//        ORDER BY t10.id DESC
+//        LIMIT ?
+//        OFFSET ? * ?
+//        """.trimIndent()
+//    )
+//    val query11 = parser.parseAstStatement(
+//        """
+//        SELECT *
+//        FROM t1
+//        WHERE t1.someTimestamp < UTCNOW() AND t1.id > ?
+//        ORDER BY t1.id DESC
+//        LIMIT ?
+//        OFFSET ? * ?
+//        """.trimIndent()
+//    )
+
+//    val statement1 = runBlocking { pipeline.compileAsync(query1) }
+//    val statement2 = runBlocking { pipeline.compileAsync(query2) }
+    val statement3 = runBlocking { pipeline.compileAsync(query3) }
+//    val statement4 = runBlocking { pipeline.compileAsync(query4) }
+//    val statement5 = runBlocking { pipeline.compileAsync(query5) }
+//    val statement6 = runBlocking { pipeline.compileAsync(query6) }
+//    val statement7 = runBlocking { pipeline.compileAsync(query7) }
+//    val statement8 = runBlocking { pipeline.compileAsync(query8) }
+//    val statement9 = runBlocking { pipeline.compileAsync(query9) }
+//    val statement10 = runBlocking { pipeline.compileAsync(query10) }
+//    val statement11 = runBlocking { pipeline.compileAsync(query11) }
+
+    val result = runBlocking { statement3.eval(session) }
+    val exprValue = (result as PartiQLResult.Value).value
+    println(exprValue)
+}
+
 @BenchmarkMode(Mode.All)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 open class PartiQLCompilerPipelineBenchmark {
