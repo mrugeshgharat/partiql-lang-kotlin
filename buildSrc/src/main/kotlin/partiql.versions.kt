@@ -45,7 +45,7 @@ object Versions {
     const val kotlinxCollections = "0.3.5"
     const val picoCli = "4.7.0"
     const val kasechange = "1.3.0"
-    const val pig = "0.6.2"
+    const val pig = "0.6.3"
     const val kotlinxCoroutines = "1.6.0"
     const val kotlinxCoroutinesJdk8 = "1.6.0"
     const val ktlint = "0.42.1" // we're on an old version of ktlint. TODO upgrade https://github.com/partiql/partiql-lang-kotlin/issues/1418

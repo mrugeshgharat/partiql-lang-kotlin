@@ -27,7 +27,7 @@ object Versions {
     const val dokka = "1.6.10"
     const val kotlin = "1.6.20"
     const val ktlintGradle = "10.2.1"
-    const val pig = "0.6.1"
+    const val pig = "0.6.3"
 }
 
 object Plugins {
