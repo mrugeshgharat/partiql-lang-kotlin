@@ -26,6 +26,7 @@ import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.jvm.tasks.Jar
+import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.getByName
@@ -173,7 +174,8 @@ abstract class PublishPlugin : Plugin<Project> {
                     sign(publishing.publications["maven"])
                 }
             }
-            extensions.getByType(JReleaserExtension::class.java).run {
+
+            configure<JReleaserExtension> {
                 signing.apply {
                     setActive("ALWAYS")
                     armored.set(true)
