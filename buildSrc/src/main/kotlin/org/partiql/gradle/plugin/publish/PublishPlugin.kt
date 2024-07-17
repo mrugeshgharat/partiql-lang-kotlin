@@ -29,13 +29,14 @@ import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.getByName
-import org.gradle.kotlin.dsl.provideDelegate
 import org.gradle.plugins.signing.SigningExtension
 import org.gradle.plugins.signing.SigningPlugin
 import org.jetbrains.dokka.gradle.DokkaPlugin
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import org.jreleaser.gradle.plugin.JReleaserExtension
+import org.jreleaser.gradle.plugin.JReleaserPlugin
 import java.io.File
 
 /**
@@ -54,6 +55,7 @@ abstract class PublishPlugin : Plugin<Project> {
         pluginManager.apply(SigningPlugin::class.java)
         pluginManager.apply(DokkaPlugin::class.java)
         pluginManager.apply(ShadowPlugin::class.java)
+        pluginManager.apply(JReleaserPlugin::class.java)
         extensions.getByType(KotlinJvmProjectExtension::class.java).explicitApi = ExplicitApiMode.Strict
         val ext = extensions.create("publish", PublishExtension::class.java)
         target.afterEvaluate { publish(ext) }
@@ -160,25 +162,37 @@ abstract class PublishPlugin : Plugin<Project> {
                         }
                     }
                 }
-                repositories {
-                    maven {
-                        url = uri("https://aws.oss.sonatype.org/service/local/")
-                        credentials {
-                            val ossrhUsername: String by rootProject
-                            val ossrhPassword: String by rootProject
-                            username = ossrhUsername
-                            password = ossrhPassword
-                        }
-                    }
-                }
             }
 
             // Sign only if publishing to Maven Central
-            extensions.getByType(SigningExtension::class.java).run {
-                setRequired {
-                    releaseVersion && gradle.taskGraph.allTasks.any { it is PublishToMavenRepository }
+            if (releaseVersion) {
+                extensions.getByType(SigningExtension::class.java).run {
+                    setRequired {
+                        gradle.taskGraph.allTasks.any { it is PublishToMavenRepository }
+                    }
+                    sign(publishing.publications["maven"])
                 }
-                sign(publishing.publications["maven"])
+            }
+            extensions.getByType(JReleaserExtension::class.java).run {
+                signing.apply {
+                    setActive("ALWAYS")
+                    armored.set(true)
+                }
+                environment.apply {
+                    setVariables("~/.gradle/gradle.properties")
+                }
+                deploy.apply {
+                    maven {
+                        nexus2 {
+                            create("maven-central") {
+                                setActive("ALWAYS")
+                                url.set("https://aws.oss.sonatype.org/service/local/")
+                                closeRepository.set(false)
+                                releaseRepository.set(false)
+                            }
+                        }
+                    }
+                }
             }
         }
     }

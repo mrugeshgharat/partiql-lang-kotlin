@@ -25,6 +25,7 @@ repositories {
 object Versions {
     const val detekt = "1.20.0-RC2"
     const val dokka = "1.6.10"
+    const val jreleaser = "1.9.0"
     const val kotlin = "1.6.20"
     const val ktlintGradle = "10.2.1"
     const val pig = "0.6.1"
@@ -34,6 +35,7 @@ object Versions {
 object Plugins {
     const val detekt = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:${Versions.detekt}"
     const val dokka = "org.jetbrains.dokka:dokka-gradle-plugin:${Versions.dokka}"
+    const val jreleaser = "org.jreleaser:jreleaser-gradle-plugin:${Versions.jreleaser}"
     const val kotlinGradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
     const val ktlintGradle = "org.jlleitschuh.gradle:ktlint-gradle:${Versions.ktlintGradle}"
     const val pig = "org.partiql:pig-gradle-plugin:${Versions.pig}"
@@ -43,6 +45,7 @@ object Plugins {
 dependencies {
     implementation(Plugins.detekt)
     implementation(Plugins.dokka)
+    implementation(Plugins.jreleaser)
     implementation(Plugins.kotlinGradle)
     implementation(Plugins.ktlintGradle)
     implementation(Plugins.pig)
