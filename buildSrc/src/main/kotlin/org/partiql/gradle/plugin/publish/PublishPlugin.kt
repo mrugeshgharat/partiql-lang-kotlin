@@ -198,6 +198,11 @@ abstract class PublishPlugin : Plugin<Project> {
                         }
                     }
                 }
+                release {
+                    github {
+                        enabled.set(false)
+                    }
+                }
             }
         }
     }
