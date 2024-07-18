@@ -68,6 +68,14 @@ abstract class PublishPlugin : Plugin<Project> {
         // Run dokka unless the environment explicitly specifies false
         val runDokka = (System.getenv()["DOKKA"] != "false") || releaseVersion
 
+        if (releaseVersion) {
+            tasks["assembleDist"].doFirst {
+                // This is a workaround for a weird behavior.
+                // https://github.com/jreleaser/jreleaser/issues/1292
+                mkdir("$buildDir/jreleaser")
+            }
+        }
+
         // Include "sources" and "javadoc" in the JAR
         extensions.getByType(JavaPluginExtension::class.java).run {
             withSourcesJar()
