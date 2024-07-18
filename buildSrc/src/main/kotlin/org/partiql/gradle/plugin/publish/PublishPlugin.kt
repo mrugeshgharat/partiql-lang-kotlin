@@ -166,6 +166,8 @@ abstract class PublishPlugin : Plugin<Project> {
                         credentials {
                             val ossrhUsername: String by rootProject
                             val ossrhPassword: String by rootProject
+                            println("ossrhUsername: $ossrhUsername")
+                            println("ossrhPassword: $ossrhPassword")
                             username = ossrhUsername
                             password = ossrhPassword
                         }
