@@ -177,6 +177,7 @@ abstract class PublishPlugin : Plugin<Project> {
                 }
             }
 
+            // TODO is this the right way to configure? seems like the values aren't being propagated through
             configure<JReleaserExtension> {
                 signing.apply {
                     setActive("ALWAYS")
