@@ -55,8 +55,10 @@ dependencies {
 }
 
 rootProject.run {
-    repositories {
-        gradlePluginPortal()
+    buildscript {
+        repositories {
+            gradlePluginPortal()
+        }
     }
     apply(plugin = "io.github.gradle-nexus.publish-plugin")
     group = rootProject.properties["group"] as String
