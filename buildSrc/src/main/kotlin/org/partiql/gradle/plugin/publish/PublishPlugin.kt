@@ -56,7 +56,6 @@ abstract class PublishPlugin : Plugin<Project> {
         pluginManager.apply(SigningPlugin::class.java)
         pluginManager.apply(DokkaPlugin::class.java)
         pluginManager.apply(ShadowPlugin::class.java)
-        pluginManager.apply(NexusPublishPlugin::class.java)
         extensions.getByType(KotlinJvmProjectExtension::class.java).explicitApi = ExplicitApiMode.Strict
         val ext = extensions.create("publish", PublishExtension::class.java)
         target.afterEvaluate { publish(ext) }
