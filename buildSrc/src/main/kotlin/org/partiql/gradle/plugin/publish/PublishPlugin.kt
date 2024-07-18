@@ -180,15 +180,26 @@ abstract class PublishPlugin : Plugin<Project> {
 
             // TODO is this the right way to configure? seems like the values aren't being propagated through
             apply<JReleaserPlugin>()
-            configure<JReleaserExtension> {
-                signing.apply {
+            extensions.getByType(JReleaserExtension::class.java).apply {
+
+                dryrun.set(false)
+
+                release {
+                    github {
+                        enabled.set(false)
+                    }
+                }
+
+                announce {
+                    enabled.set(false)
+                }
+
+                signing {
                     setActive("ALWAYS")
                     armored.set(true)
                 }
-                environment.apply {
-                    setVariables("~/.gradle/gradle.properties")
-                }
-                deploy.apply {
+
+                deploy {
                     maven {
                         nexus2 {
                             create("maven-central") {
@@ -200,11 +211,8 @@ abstract class PublishPlugin : Plugin<Project> {
                         }
                     }
                 }
-                release.apply {
-                    github {
-                        enabled.set(false)
-                    }
-                }
+
+
             }
         }
     }
