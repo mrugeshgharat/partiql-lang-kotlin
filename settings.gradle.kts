@@ -14,6 +14,12 @@
 
 rootProject.name = "partiql"
 
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+}
+
 include(
     ":custom-ktlint-rules",
     "partiql-ast",

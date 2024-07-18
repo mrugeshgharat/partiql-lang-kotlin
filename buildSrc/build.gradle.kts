@@ -53,15 +53,3 @@ dependencies {
     implementation(Plugins.shadow)
     implementation(Plugins.nexus)
 }
-
-rootProject.run {
-    buildscript {
-        repositories {
-            gradlePluginPortal()
-        }
-    }
-    apply(plugin = "io.github.gradle-nexus.publish-plugin")
-    group = rootProject.properties["group"] as String
-    version = rootProject.properties["version"] as String
-}
-
