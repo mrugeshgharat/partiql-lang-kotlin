@@ -160,17 +160,6 @@ abstract class PublishPlugin : Plugin<Project> {
                         }
                     }
                 }
-                repositories {
-                    maven {
-                        url = uri("https://aws.oss.sonatype.org/service/local/")
-                        credentials {
-                            val ossrhUsername: String by rootProject
-                            val ossrhPassword: String by rootProject
-                            username = ossrhUsername
-                            password = ossrhPassword
-                        }
-                    }
-                }
             }
 
             // Sign only if publishing to Maven Central

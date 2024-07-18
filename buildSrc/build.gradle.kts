@@ -1,3 +1,5 @@
+import java.time.Duration
+
 /*
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -16,10 +18,29 @@
 plugins {
     `kotlin-dsl`
     id("java-gradle-plugin")
+    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
 }
 
 repositories {
     gradlePluginPortal()
+}
+
+nexusPublishing {
+    // Documentation for this plugin, see https://github.com/gradle-nexus/publish-plugin/blob/v1.3.0/README.md
+    this.repositories {
+        sonatype {
+            nexusUrl.set(uri("https://aws.oss.sonatype.org/service/local/"))
+            // For CI environments, the username and password should be stored in
+            // ORG_GRADLE_PROJECT_sonatypeUsername and ORG_GRADLE_PROJECT_sonatypePassword respectively.
+            username.set(properties["ossrhUsername"].toString())
+            password.set(properties["ossrhPassword"].toString())
+        }
+    }
+
+    // these are not strictly required. The default timeouts are set to 1 minute. But Sonatype can be really slow.
+    // If you get the error "java.net.SocketTimeoutException: timeout", these lines will help.
+    connectTimeout = Duration.ofMinutes(3)
+    clientTimeout = Duration.ofMinutes(3)
 }
 
 object Versions {
@@ -48,6 +69,8 @@ dependencies {
     implementation(Plugins.pig)
     implementation(Plugins.shadow)
 }
+
+
 
 allprojects {
     group = rootProject.properties["group"] as String
