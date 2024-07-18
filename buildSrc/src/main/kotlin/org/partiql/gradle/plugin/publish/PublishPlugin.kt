@@ -195,14 +195,6 @@ abstract class PublishPlugin : Plugin<Project> {
                                 releaseRepository.set(false)
                             }
                         }
-                        github {
-                            enabled.set(false)
-                        }
-                    }
-                }
-                release {
-                    github {
-                        enabled.set(false)
                     }
                 }
             }
