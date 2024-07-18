@@ -17,6 +17,8 @@ package org.partiql.gradle.plugin.publish
 
 import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import io.github.gradlenexus.publishplugin.NexusPublishExtension
+import io.github.gradlenexus.publishplugin.NexusPublishPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
@@ -26,6 +28,8 @@ import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.jvm.tasks.Jar
+import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.getByName
@@ -160,15 +164,28 @@ abstract class PublishPlugin : Plugin<Project> {
                         }
                     }
                 }
+//                repositories {
+//                    maven {
+//                        url = uri("https://aws.oss.sonatype.org/service/local/")
+//                        credentials {
+//                            val ossrhUsername: String by rootProject
+//                            val ossrhPassword: String by rootProject
+//                            username = ossrhUsername
+//                            password = ossrhPassword
+//                        }
+//                    }
+//                }
+            }
+
+            apply<NexusPublishPlugin>()
+            configure<NexusPublishExtension> {
                 repositories {
-                    maven {
-                        url = uri("https://aws.oss.sonatype.org/service/local/")
-                        credentials {
-                            val ossrhUsername: String by rootProject
-                            val ossrhPassword: String by rootProject
-                            username = ossrhUsername
-                            password = ossrhPassword
-                        }
+                    sonatype {
+                        nexusUrl.set(uri("https://aws.oss.sonatype.org/service/local/"))
+                        val ossrhUsername: String by rootProject
+                        val ossrhPassword: String by rootProject
+                        username.set(properties["ossrhUsername"].toString())
+                        password.set(properties["ossrhPassword"].toString())
                     }
                 }
             }
