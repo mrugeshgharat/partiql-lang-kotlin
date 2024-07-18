@@ -18,29 +18,11 @@ import java.time.Duration
 plugins {
     `kotlin-dsl`
     id("java-gradle-plugin")
-    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
+    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
 repositories {
     gradlePluginPortal()
-}
-
-nexusPublishing {
-    // Documentation for this plugin, see https://github.com/gradle-nexus/publish-plugin/blob/v1.3.0/README.md
-    this.repositories {
-        sonatype {
-            nexusUrl.set(uri("https://aws.oss.sonatype.org/service/local/"))
-            // For CI environments, the username and password should be stored in
-            // ORG_GRADLE_PROJECT_sonatypeUsername and ORG_GRADLE_PROJECT_sonatypePassword respectively.
-            username.set(properties["ossrhUsername"].toString())
-            password.set(properties["ossrhPassword"].toString())
-        }
-    }
-
-    // these are not strictly required. The default timeouts are set to 1 minute. But Sonatype can be really slow.
-    // If you get the error "java.net.SocketTimeoutException: timeout", these lines will help.
-    connectTimeout = Duration.ofMinutes(3)
-    clientTimeout = Duration.ofMinutes(3)
 }
 
 object Versions {
@@ -50,6 +32,7 @@ object Versions {
     const val ktlintGradle = "10.2.1"
     const val pig = "0.6.1"
     const val shadow = "8.1.1"
+    const val nexus = "2.0.0"
 }
 
 object Plugins {
@@ -59,6 +42,7 @@ object Plugins {
     const val ktlintGradle = "org.jlleitschuh.gradle:ktlint-gradle:${Versions.ktlintGradle}"
     const val pig = "org.partiql:pig-gradle-plugin:${Versions.pig}"
     const val shadow = "com.github.johnrengelman:shadow:${Versions.shadow}"
+    const val nexus = "io.github.gradle-nexus:publish-plugin:${Versions.nexus}"
 }
 
 dependencies {
@@ -68,9 +52,8 @@ dependencies {
     implementation(Plugins.ktlintGradle)
     implementation(Plugins.pig)
     implementation(Plugins.shadow)
+    implementation(Plugins.nexus)
 }
-
-
 
 allprojects {
     group = rootProject.properties["group"] as String

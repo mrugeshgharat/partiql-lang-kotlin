@@ -17,6 +17,7 @@ package org.partiql.gradle.plugin.publish
 
 import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import io.github.gradlenexus.publishplugin.NexusPublishExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
@@ -29,7 +30,7 @@ import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.getByName
-import org.gradle.kotlin.dsl.provideDelegate
+import org.gradle.kotlin.dsl.repositories
 import org.gradle.plugins.signing.SigningExtension
 import org.gradle.plugins.signing.SigningPlugin
 import org.jetbrains.dokka.gradle.DokkaPlugin
@@ -37,6 +38,7 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import java.io.File
+import java.time.Duration
 
 /**
  * Gradle plugin to consolidates the following publishing logic
@@ -160,6 +162,25 @@ abstract class PublishPlugin : Plugin<Project> {
                         }
                     }
                 }
+            }
+
+            extensions.getByType(NexusPublishExtension::class.java).run {
+
+                // Documentation for this plugin, see https://github.com/gradle-nexus/publish-plugin/blob/v1.3.0/README.md
+                this.repositories {
+                    sonatype {
+                        nexusUrl.set(uri("https://aws.oss.sonatype.org/service/local/"))
+                        // For CI environments, the username and password should be stored in
+                        // ORG_GRADLE_PROJECT_sonatypeUsername and ORG_GRADLE_PROJECT_sonatypePassword respectively.
+                        username.set(properties["ossrhUsername"].toString())
+                        password.set(properties["ossrhPassword"].toString())
+                    }
+                }
+
+                // these are not strictly required. The default timeouts are set to 1 minute. But Sonatype can be really slow.
+                // If you get the error "java.net.SocketTimeoutException: timeout", these lines will help.
+                connectTimeout.set(Duration.ofMinutes(3))
+                clientTimeout.set(Duration.ofMinutes(3))
             }
 
             // Sign only if publishing to Maven Central
