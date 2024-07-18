@@ -18,7 +18,6 @@ import java.time.Duration
 plugins {
     `kotlin-dsl`
     id("java-gradle-plugin")
-    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
 repositories {
