@@ -56,7 +56,7 @@ dependencies {
 
 rootProject.run {
     plugins.run {
-        apply("io.github.gradle-nexus.publish-plugin")
+        apply(Plugins.nexus)
     }
     group = rootProject.properties["group"] as String
     version = rootProject.properties["version"] as String
