@@ -7,6 +7,7 @@ import org.partiql.eval.ExprValue
 import org.partiql.eval.Mode
 import org.partiql.eval.Statement
 import org.partiql.eval.compiler.PartiQLCompiler
+import org.partiql.eval.compiler.Strategy
 import org.partiql.eval.internal.operator.Aggregate
 import org.partiql.eval.internal.operator.rel.RelOpAggregate
 import org.partiql.eval.internal.operator.rel.RelOpDistinct
@@ -110,7 +111,12 @@ import org.partiql.types.PType
 /**
  * This class is responsible for producing an executable statement from logical operators.
  */
-internal class StandardCompiler : PartiQLCompiler {
+internal class StandardCompiler(strategies: List<Strategy>) : PartiQLCompiler {
+
+    // compiler strategies
+    private val strategies: List<Strategy> = strategies
+
+    internal constructor() : this(emptyList())
 
     override fun prepare(plan: Plan, mode: Mode): Statement = try {
         val visitor = _Visitor(mode)
@@ -158,6 +164,13 @@ internal class StandardCompiler : PartiQLCompiler {
          * @return
          */
         override fun defaultReturn(operator: org.partiql.plan.Operator, ctx: Unit): Expr {
+            for (strategy in strategies) {
+                val op = strategy.apply(operator)
+                if (op != null) {
+                    // first match
+                    return op
+                }
+            }
             error("No compiler strategy matches the operator: ${operator::class.simpleName}")
         }
 
