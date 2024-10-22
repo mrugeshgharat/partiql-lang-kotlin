@@ -1,5 +1,6 @@
 package org.partiql.eval.compiler;
 
+import org.jetbrains.annotations.NotNull;
 import org.partiql.eval.Expr;
 import org.partiql.plan.Operator;
 
@@ -12,33 +13,37 @@ import java.util.function.Predicate;
  */
 public abstract class Strategy {
 
-    private final Pattern operand;
+    @NotNull
+    public final Pattern pattern;
 
-    protected Strategy(Pattern operand) {
-        this.operand = operand;
+    protected Strategy(@NotNull Pattern pattern) {
+        this.pattern = pattern;
     }
 
     /**
      * Applies the strategy to a logical plan operator and returns the physical operation (expr).
      *
-     * @param operator the logical operator to be converted
+     * @param match holds the matched operators
      * @return the physical operation
      */
-    public abstract Expr apply(Operator operator);
+    @NotNull
+    public abstract Expr apply(@NotNull Match match);
 
     // -- PATTERN CONSTRUCTORS
 
     /**
      * Create an operand that matches the given class.
      */
-    public static Pattern pattern(Class<? extends Operator> clazz) {
+    @NotNull
+    public static Pattern pattern(@NotNull Class<? extends Operator> clazz) {
         return new Pattern(clazz);
     }
 
     /**
      * Create an operand that matches the given class and predicate.
      */
-    public static Pattern pattern(Class<? extends Operator> clazz, Predicate<Operator> predicate) {
+    @NotNull
+    public static Pattern pattern(@NotNull Class<? extends Operator> clazz, @NotNull Predicate<Operator> predicate) {
         return new Pattern(clazz, predicate, Collections.emptyList());
     }
 }
