@@ -358,7 +358,7 @@ excludeExprSteps
     ;
 
 fromClause
-    : FROM tableReference;
+    : FROM ( tableReference ( COMMA tableReference)* );
 
 whereClauseSelect
     : WHERE arg=exprSelect;
@@ -468,16 +468,15 @@ edgeAbbrev
  */
 
 tableReference
-    : lhs=tableReference joinType? CROSS JOIN rhs=joinRhs     # TableCrossJoin
-    | lhs=tableReference COMMA rhs=joinRhs                    # TableCrossJoin
-    | lhs=tableReference joinType? JOIN rhs=joinRhs joinSpec  # TableQualifiedJoin
-    | tableNonJoin                                            # TableRefBase
-    | PAREN_LEFT tableReference PAREN_RIGHT                   # TableWrapped
+    : tablePrimary # TableRefPrimary
+    | lhs=tableReference joinType? CROSS JOIN rhs=tablePrimary # TableCrossJoin
+    | lhs=tableReference joinType? JOIN rhs=tableReference joinSpec  # TableQualifiedJoin
     ;
 
-tableNonJoin
+tablePrimary
     : tableBaseReference
     | tableUnpivot
+    | tableWrapped
     ;
 
 tableBaseReference
@@ -487,15 +486,11 @@ tableBaseReference
     ;
 
 tableUnpivot
-    : UNPIVOT expr asIdent? atIdent? byIdent?;
-
-joinRhs
-    : tableNonJoin                           # JoinRhsBase
-    | PAREN_LEFT tableReference PAREN_RIGHT  # JoinRhsTableJoined
+    : UNPIVOT expr asIdent? atIdent? byIdent?
     ;
 
-joinSpec
-    : ON expr;
+tableWrapped
+    : PAREN_LEFT tableReference PAREN_RIGHT;
 
 joinType
     : mod=INNER
@@ -504,6 +499,9 @@ joinType
     | mod=FULL OUTER?
     | mod=OUTER
     ;
+
+joinSpec
+    : ON expr;
 
 /**
  *
